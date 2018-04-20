@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#465DE5"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="16dp">
+    <TextView android:id="@+id/tv_call_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text=""
+        android:textColor="#fff" android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_weight="9">
+        <Button android:id="@+id/btn_call"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:text="전화"/>
+        <Button android:id="@+id/btn_sms"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:text="문자"/>
+        <Button android:id="@+id/btn_close"
+            android:layout_width="0dp"
+            android:layout_weight="3"
+            android:layout_height="wrap_content"
+            android:text="닫기"/>
+    </LinearLayout>
+
+</LinearLayout>
+

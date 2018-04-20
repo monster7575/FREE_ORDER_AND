@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@android:color/transparent"
+    android:id="@+id/toolbar"
+    app:contentInsetStart="0dp"
+    android:layout_centerVertical="true"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="?attr/actionBarSize"
+    android:layout_alignParentTop="true">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/toolbar_height"
+            android:background="@color/colorSubHeader"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp">
+
+            <com.beardedhen.androidbootstrap.BootstrapButton
+                android:id="@+id/toolbar_refresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:bootstrapText="새로고침"
+                app:bootstrapBrand="info"
+                app:bootstrapSize="md"
+                app:buttonMode="regular"
+                app:showOutline="false"
+                app:roundedCorners="true"
+                android:layout_centerVertical="true"
+                android:visibility="visible"
+                />
+
+            <ImageButton
+                android:id="@+id/toolbar_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/top_arrow_left"
+                android:background="@android:color/transparent"
+                android:layout_centerVertical="true"
+                android:visibility="gone"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/toolbar_title"
+                android:visibility="visible"
+                android:textSize="16.3sp"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                android:text="상점명"
+                android:textColor="@color/colorBackground"
+                android:textAllCaps="true"/>
+
+            <com.beardedhen.androidbootstrap.BootstrapButton
+                android:id="@+id/toolbar_setting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:bootstrapText="설정"
+                app:bootstrapBrand="info"
+                app:bootstrapSize="md"
+                app:buttonMode="regular"
+                app:showOutline="false"
+                app:roundedCorners="true"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:visibility="visible"
+                />
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
+
+
+</android.support.v7.widget.Toolbar>

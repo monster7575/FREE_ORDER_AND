@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1030579028084",
+    "firebase_url": "https://freeorder-200307.firebaseio.com",
+    "project_id": "freeorder-200307",
+    "storage_bucket": "freeorder-200307.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1030579028084:android:ab3df7bf72f4670f",
+        "android_client_info": {
+          "package_name": "com.example.sampleandroid"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1030579028084-k3450vrrsuhfav7v0hc585m2mnug5tih.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.sampleandroid",
+            "certificate_hash": "9b2c083ac7bca5aa56cf5d9884cf4ba279b97201"
+          }
+        },
+        {
+          "client_id": "1030579028084-tkihafi847aqhhhudg00d65dkd0vnabg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPSU_WXGLfUzPkgvN48loWCDJkOPQsuOo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1030579028084-tkihafi847aqhhhudg00d65dkd0vnabg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
