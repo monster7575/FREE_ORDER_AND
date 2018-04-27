@@ -17,6 +17,7 @@ public class BasePreference {
     private static BasePreference instance;
     private final String PREF_NAME = "com.example.sampleandroid";
     public static final String GCM_TOKEN = "GCM_TOKEN";
+    public static final String SELLER_DATA = "SELLER_DATA";
 
     static Context mContext;
     private Gson mson;

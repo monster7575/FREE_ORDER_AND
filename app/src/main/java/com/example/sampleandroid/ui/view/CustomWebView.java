@@ -29,6 +29,11 @@ import com.example.sampleandroid.common.preference.BasePreference;
 import com.example.sampleandroid.common.tool.Logger;
 import com.example.sampleandroid.common.tool.Utils;
 import com.example.sampleandroid.data.config.Constants;
+import com.example.sampleandroid.data.model.ResponseData;
+import com.example.sampleandroid.data.model.SellerData;
+import com.example.sampleandroid.data.model.SellerReponse;
+import com.example.sampleandroid.data.tool.DataInterface;
+import com.example.sampleandroid.data.tool.DataManager;
 import com.example.sampleandroid.ui.activity.MainActivity;
 
 import org.json.JSONException;
@@ -128,7 +133,9 @@ public class CustomWebView {
             }
 
             String action = Utils.queryToMap(url).get("name");
+            String phonenb = Utils.queryToMap(url).get("phonenb");
             Logger.log(Logger.LogState.E, "action = " + action);
+            Logger.log(Logger.LogState.E, "phonenb = " + phonenb);
             if(action != null)
             {
 
@@ -140,9 +147,29 @@ public class CustomWebView {
                 }
                 else if(action.equals("go_main"))
                 {
-                    Intent intent = new Intent(base, MainActivity.class);
-                    base.startActivity(intent);
-                    base.finish();
+                    if(phonenb != null)
+                    {
+                        HashMap<String, String> params = new HashMap<>();
+                        params.put("phonenb", phonenb);
+                        DataManager.getInstance(base).api.loginSeller(base, params, new DataInterface.ResponseCallback<SellerReponse>() {
+                            @Override
+                            public void onSuccess(SellerReponse response) {
+                                Logger.log(Logger.LogState.D, "savelog success");
+
+                                SellerData.getInstance().setCurrentSellerVO(base, response.data.get(0));
+
+                                Intent intent = new Intent(base, MainActivity.class);
+                                base.startActivity(intent);
+                                base.finish();
+                            }
+
+                            @Override
+                            public void onError() {
+                                Logger.log(Logger.LogState.E, "savelog fail");
+                            }
+                        });
+                    }
+
                     return true;
                 }
                 else if(action.equals("start_loading"))
@@ -155,8 +182,8 @@ public class CustomWebView {
                     base.stopIndicator();
                     return true;
                 }
-            }
 
+            }
             curUrl = url;
             return false;
         }

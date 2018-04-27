@@ -20,12 +20,18 @@ public class Constants {
     public static final String INTENT_DATA_KEY = "INTENT_DATA_KEY";
     public static final String LOG_TAG = "FREE_ORDER";
 
+    public final class API_URL {
+        public static final String API_SELLER_LOGIN = "/srv/seller/api/select/phonenb";
+        public static final String API_SHORT_URL = "/srv/seller/api/shorturl";
+        public static final String API_SELLER_MSG_INSERT = "/srv/sellmsglog/api/insert";
+        public static final String API_BUYER_SELECT = "/srv/buyer/api/select";
+    }
 
     public final class MENU_LINKS {
         public static final String BUYERLIST_URL = "http://" + Constants.DOING_DOMAIN + "/srv/buyer/mobile/list";
         public static final String SELLER_LOGIN = "http://" + Constants.DOING_DOMAIN + "/srv/seller/mobile/login";
         public static final String SELLER_SETTING = "http://" + Constants.DOING_DOMAIN + "/srv/seller/mobile/main/setting";
-        public static final String ORDER_URL = "http://" + Constants.DOING_DOMAIN + "/orders/%s";
+        public static final String ORDER_URL = "http://" + Constants.DOING_DOMAIN + "/srv/buyer/mobile/insert/%s/%s";
     }
 
     public final class VIEW_ANIMATION {

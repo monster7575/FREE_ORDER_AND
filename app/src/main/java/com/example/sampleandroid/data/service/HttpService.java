@@ -1,5 +1,9 @@
 package com.example.sampleandroid.data.service;
 
+import com.example.sampleandroid.data.config.Constants;
+import com.example.sampleandroid.data.model.BuyerReponse;
+import com.example.sampleandroid.data.model.ResponseData;
+import com.example.sampleandroid.data.model.SellerReponse;
 import com.example.sampleandroid.data.model.ShortData;
 
 import java.util.Map;
@@ -18,8 +22,18 @@ public interface HttpService {
 
 
     @FormUrlEncoded
-    @POST("/srv/orders/api/shorturl")
+    @POST(Constants.API_URL.API_SHORT_URL)
     Call<ShortData> callShortUrl(@FieldMap Map<String, String> params);
 
+    @FormUrlEncoded
+    @POST(Constants.API_URL.API_SELLER_LOGIN)
+    Call<SellerReponse> callSellerLogin(@FieldMap Map<String, String> params);
 
+    @FormUrlEncoded
+    @POST(Constants.API_URL.API_SELLER_MSG_INSERT)
+    Call<ResponseData> callSellerMsgInsert(@FieldMap Map<String, String> params);
+
+    @FormUrlEncoded
+    @POST(Constants.API_URL.API_BUYER_SELECT)
+    Call<BuyerReponse> callSelectBuyer(@FieldMap Map<String, String> params);
 }
