@@ -19,8 +19,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.android.internal.telephony.ITelephony;
 import com.example.sampleandroid.R;
+import com.example.sampleandroid.common.tool.Logger;
+import com.example.sampleandroid.data.config.Constants;
+import com.example.sampleandroid.data.model.ResponseData;
+import com.example.sampleandroid.data.model.SellerData;
+import com.example.sampleandroid.data.model.SellerReponse;
+import com.example.sampleandroid.data.model.ShortData;
+import com.example.sampleandroid.data.tool.DataInterface;
+import com.example.sampleandroid.data.tool.DataManager;
+import com.example.sampleandroid.ui.activity.MainActivity;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 
 import butterknife.ButterKnife;
 
@@ -31,6 +41,9 @@ import butterknife.ButterKnife;
 public class CallingService extends Service{
 
     public static final String EXTRA_CALL_NUMBER = "call_number";
+    public static final String EXTRA_SELLER_IDX = "call_idx";
+    public static final String EXTRA_SELLER_CONTENT = "call_content";
+    public static final String EXTRA_BUYER_IDX = "call_bobjid";
     protected View mRootView;
     private WindowManager.LayoutParams params;
     private WindowManager mWindowManager;
@@ -67,20 +80,62 @@ public class CallingService extends Service{
 //        mWindowManager.addView(mRootView, params);
 
 
-        String phoneNumber = intent.getStringExtra(EXTRA_CALL_NUMBER);
+        final String phoneNumber = intent.getStringExtra(EXTRA_CALL_NUMBER);
+        final String sellerIdx = intent.getStringExtra(EXTRA_SELLER_IDX);
+        final String sellerContent = intent.getStringExtra(EXTRA_SELLER_CONTENT);
+        final String bobjid = intent.getStringExtra(EXTRA_BUYER_IDX);
 
-        TextView tv_call_number = (TextView) mRootView.findViewById(R.id.tv_call_number);
-        tv_call_number.setText(phoneNumber);
+        final HashMap<String, String> params = new HashMap<>();
+        params.put("content", sellerContent);
+        params.put("bobjid", bobjid);
+        params.put("sobjid", sellerIdx);
+        DataManager.getInstance(this).api.insertSellerMsg(this, params, new DataInterface.ResponseCallback<ResponseData>() {
+            @Override
+            public void onSuccess(ResponseData response) {
+                Logger.log(Logger.LogState.D, "insertSellerMsg success");
 
+                String result = response.getResult();
+                if(result.equals("1"))
+                {
+                    getShortUrl(phoneNumber, sellerIdx, sellerContent);
+                }
+                else
+                    Logger.log(Logger.LogState.E, "insertSellerMsg fail");
+            }
 
-        sendSms(phoneNumber);
+            @Override
+            public void onError() {
+                Logger.log(Logger.LogState.E, "insertSellerMsg fail");
+            }
+        });
 
-        return START_REDELIVER_INTENT;
+        return START_NOT_STICKY ;
     }
 
-    private void sendSms(String phoneNumber)
+    private void getShortUrl(final String phoneNumber, String sellerIdx, final String sellerContent)
     {
-        String smsText = "고객님 전화 감사합니다. 아래 링크를 터치하여 상세 주문을 진행하여주세요. 감사합니다. http://m.naver.com";
+        HashMap<String, String> params = new HashMap<>();
+        params.put("longUrl", String.format(Constants.MENU_LINKS.ORDER_URL, phoneNumber, sellerIdx));
+        DataManager.getInstance(this).api.getShortUrl(this, params, new DataInterface.ResponseCallback<ShortData>() {
+            @Override
+            public void onSuccess(ShortData response) {
+                Logger.log(Logger.LogState.D, "savelog success");
+
+                String shortUrl = response.getId();
+                sendSms(phoneNumber, sellerContent, shortUrl);
+                stopSelf();
+            }
+
+            @Override
+            public void onError() {
+                Logger.log(Logger.LogState.E, "savelog fail");
+            }
+        });
+    }
+
+    private void sendSms(String phoneNumber, String sellerContent, String shortUrl)
+    {
+        String smsText = sellerContent + shortUrl;
         PendingIntent sentIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT_ACTION"), 0);
         PendingIntent deliveredIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_DELIVERED_ACTION"), 0);
 
