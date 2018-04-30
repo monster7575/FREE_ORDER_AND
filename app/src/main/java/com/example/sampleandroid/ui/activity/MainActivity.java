@@ -29,6 +29,7 @@ import com.example.sampleandroid.data.config.Constants;
 import com.example.sampleandroid.ui.view.CustomWebView;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import butterknife.BindView;
@@ -199,7 +200,28 @@ public class MainActivity extends AppActivity
 
     public void initToobar(JSONObject jsonObject)
     {
-
+        try
+        {
+            String backBt = (jsonObject.has("backBt")) ? jsonObject.getString("backBt") : "N";
+            String refreshBt = (jsonObject.has("refreshBt")) ? jsonObject.getString("refreshBt") : "N";
+            String settingBt = (jsonObject.has("settingBt")) ? jsonObject.getString("settingBt") : "N";
+            if(backBt.equals("Y"))
+            {
+                toolbar_header.findViewById(R.id.toolbar_back).setVisibility(View.VISIBLE);
+                toolbar_header.findViewById(R.id.toolbar_refresh).setVisibility(View.GONE);
+                toolbar_header.findViewById(R.id.toolbar_setting).setVisibility(View.GONE);
+            }
+            if(refreshBt.equals("Y") && settingBt.equals("Y"))
+            {
+                toolbar_header.findViewById(R.id.toolbar_back).setVisibility(View.GONE);
+                toolbar_header.findViewById(R.id.toolbar_refresh).setVisibility(View.VISIBLE);
+                toolbar_header.findViewById(R.id.toolbar_setting).setVisibility(View.VISIBLE);
+            }
+        }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private class Listener implements View.OnClickListener {

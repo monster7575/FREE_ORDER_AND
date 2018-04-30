@@ -163,6 +163,21 @@ public class CustomWebView {
                     mView.loadUrl("javascript:setSeller('"+Utils.getPhoneNumber(base)+"', '"+token+"')");
                     return true;
                 }
+                else if(action.equals("setTopMenu"))
+                {
+                    String json = Utils.queryToMap(url).get("params");
+                    try
+                    {
+                        JSONObject jsonObject = new JSONObject(json);
+                        setWebViewHeaderJson(jsonObject);
+                        return true;
+                    }
+                    catch (JSONException e)
+                    {
+                        e.printStackTrace();
+                        return false;
+                    }
+                }
                 else if(action.equals("go_main"))
                 {
                     if(phonenb != null)
