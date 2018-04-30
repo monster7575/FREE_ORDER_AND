@@ -59,7 +59,7 @@ public class IncomingCallBroadcastReceiver extends BroadcastReceiver{
             final String idx = String.valueOf(sellerVO.getIdx());
             final String content = sellerVO.getContent();
             String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
-            final String phoneNumber = PhoneNumberUtils.formatNumber(incomingNumber).replace("-", "");
+            final String phoneNumber = PhoneNumberUtils.formatNumber(incomingNumber);
             Log.e("phoneNumber : ", phoneNumber);
 
             HashMap<String, String> params = new HashMap<>();
@@ -73,7 +73,7 @@ public class IncomingCallBroadcastReceiver extends BroadcastReceiver{
                     String bobjid = String.valueOf(response.data.get(0).getIdx());
 
                     Intent serviceIntent = new Intent(context, CallingService.class);
-                    serviceIntent.putExtra(CallingService.EXTRA_CALL_NUMBER, phoneNumber.replace("-", ""));
+                    serviceIntent.putExtra(CallingService.EXTRA_CALL_NUMBER, phoneNumber);
                     serviceIntent.putExtra(CallingService.EXTRA_SELLER_IDX, idx);
                     serviceIntent.putExtra(CallingService.EXTRA_SELLER_CONTENT, content);
                     serviceIntent.putExtra(CallingService.EXTRA_BUYER_IDX, bobjid);

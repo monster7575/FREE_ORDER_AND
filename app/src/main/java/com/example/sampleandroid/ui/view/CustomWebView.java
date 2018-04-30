@@ -1,15 +1,22 @@
 package com.example.sampleandroid.ui.view;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Message;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
+import android.telephony.SmsManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +29,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
+import com.android.internal.telephony.ITelephony;
 import com.example.sampleandroid.R;
 import com.example.sampleandroid.common.activity.BaseActivity;
 import com.example.sampleandroid.common.preference.BasePreference;
@@ -32,6 +41,7 @@ import com.example.sampleandroid.data.config.Constants;
 import com.example.sampleandroid.data.model.ResponseData;
 import com.example.sampleandroid.data.model.SellerData;
 import com.example.sampleandroid.data.model.SellerReponse;
+import com.example.sampleandroid.data.model.SellerVO;
 import com.example.sampleandroid.data.tool.DataInterface;
 import com.example.sampleandroid.data.tool.DataManager;
 import com.example.sampleandroid.ui.activity.MainActivity;
@@ -39,9 +49,13 @@ import com.example.sampleandroid.ui.activity.MainActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.prefs.Preferences;
 
 /**
  * Created by KCH on 2018-04-10.
@@ -133,9 +147,13 @@ public class CustomWebView {
             }
 
             String action = Utils.queryToMap(url).get("name");
-            String phonenb = Utils.queryToMap(url).get("phonenb");
+            final String phonenb = Utils.queryToMap(url).get("phonenb");
+            String content = Utils.queryToMap(url).get("content");
+            String bobjid = Utils.queryToMap(url).get("bobjid");
             Logger.log(Logger.LogState.E, "action = " + action);
             Logger.log(Logger.LogState.E, "phonenb = " + phonenb);
+            Logger.log(Logger.LogState.E, "bobjid = " + bobjid);
+
             if(action != null)
             {
 
@@ -149,8 +167,10 @@ public class CustomWebView {
                 {
                     if(phonenb != null)
                     {
+                        String gcmtoken = BasePreference.getInstance(base).getValue(BasePreference.GCM_TOKEN, "");
                         HashMap<String, String> params = new HashMap<>();
                         params.put("phonenb", phonenb);
+                        params.put("gcmtoken", gcmtoken);
                         DataManager.getInstance(base).api.loginSeller(base, params, new DataInterface.ResponseCallback<SellerReponse>() {
                             @Override
                             public void onSuccess(SellerReponse response) {
@@ -169,6 +189,48 @@ public class CustomWebView {
                             }
                         });
                     }
+                    else
+                    {
+                        Intent intent = new Intent(base, MainActivity.class);
+                        base.startActivity(intent);
+                        base.finish();
+                    }
+
+                    return true;
+                }
+                else if(action.equals("sendsms"))
+                {
+                    try
+                    {final String decodedString = URLDecoder.decode(content, "UTF-8");
+                        Logger.log(Logger.LogState.E, "content = " + decodedString);
+
+                        SellerVO sellerVO = BasePreference.getInstance(base).getObject(BasePreference.SELLER_DATA, SellerVO.class);
+                        String sellerIdx = String.valueOf(sellerVO.getIdx());
+                        final HashMap<String, String> params = new HashMap<>();
+                        params.put("content", decodedString);
+                        params.put("bobjid", bobjid);
+                        params.put("sobjid", sellerIdx);
+                        DataManager.getInstance(base).api.insertSellerMsg(base, params, new DataInterface.ResponseCallback<ResponseData>() {
+                            @Override
+                            public void onSuccess(ResponseData response) {
+                                Logger.log(Logger.LogState.D, "insertSellerMsg success");
+
+                                String result = response.getResult();
+                                Logger.log(Logger.LogState.E, "result = " + Utils.getStringByObject(result));
+                                sendSms(phonenb, decodedString);
+                            }
+
+                            @Override
+                            public void onError() {
+                                Logger.log(Logger.LogState.E, "insertSellerMsg fail");
+                            }
+                        });
+
+
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+
 
                     return true;
                 }
@@ -335,5 +397,80 @@ public class CustomWebView {
         intent.setAction(Intent.ACTION_PICK);
         intent.setType("image/*");
         base.startActivityForResult(Intent.createChooser(intent, "File Chooser"), INTENT_CALL_PROFILE_GALLERY);
+    }
+
+    private void sendSms(String phoneNumber, String sellerContent)
+    {
+        String smsText = sellerContent;
+        PendingIntent sentIntent = PendingIntent.getBroadcast(base, 0, new Intent("SMS_SENT_ACTION"), 0);
+        PendingIntent deliveredIntent = PendingIntent.getBroadcast(base, 0, new Intent("SMS_DELIVERED_ACTION"), 0);
+
+        base.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                //전화 끊기
+                try{
+
+                    TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                    Class<?> cls = Class.forName(telephonyManager.getClass().getName());
+                    Method method = cls.getDeclaredMethod("getITelephony");
+                    method.setAccessible(true);
+                    ITelephony iTelephony = (ITelephony) method.invoke(telephonyManager);
+                    // iTelephony.endCall();
+
+                }catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                switch(getResultCode()){
+                    case Activity.RESULT_OK:
+                        // 전송 성공
+                        Toast.makeText(base, "전송 완료", Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                        // 전송 실패
+                        Toast.makeText(base, "전송 실패", Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NO_SERVICE:
+                        // 서비스 지역 아님
+                        Toast.makeText(base, "서비스 지역이 아닙니다", Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_RADIO_OFF:
+                        // 무선 꺼짐
+                        Toast.makeText(base, "무선(Radio)가 꺼져있습니다", Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NULL_PDU:
+                        // PDU 실패
+                        Toast.makeText(base, "PDU Null", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }, new IntentFilter("SMS_SENT_ACTION"));
+
+        base.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+
+                switch (getResultCode()){
+                    case Activity.RESULT_OK:
+                        // 도착 완료
+                        Toast.makeText(base, "SMS 도착 완료", Toast.LENGTH_SHORT).show();
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        // 도착 안됨
+                        Toast.makeText(base, "SMS 도착 실패", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }, new IntentFilter("SMS_DELIVERED_ACTION"));
+
+        SmsManager mSmsManager = SmsManager.getDefault();
+        mSmsManager.sendTextMessage(phoneNumber, null, smsText, sentIntent, deliveredIntent);
+
+
+
     }
 }

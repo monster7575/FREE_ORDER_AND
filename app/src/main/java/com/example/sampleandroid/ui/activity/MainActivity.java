@@ -40,6 +40,8 @@ public class MainActivity extends AppActivity
     @BindView(R.id.toolbar_setting) BootstrapButton toolbar_setting;
     @BindView(R.id.toolbar_title) TextView toolbar_title;
     @BindView(R.id.toolbar_back) ImageButton toolbar_back;
+    @BindView(R.id.toolbar_refresh) BootstrapButton toolbar_refresh;
+
 
     public CustomWebView customWebView;
     private Listener mListener = new Listener();
@@ -130,6 +132,7 @@ public class MainActivity extends AppActivity
         setSupportActionBar(toolbar_header);
         toolbar_setting.setOnClickListener(mListener);
         toolbar_back.setOnClickListener(mListener);
+        toolbar_refresh.setOnClickListener(mListener);
     }
 
     private void checkPermission() {
@@ -212,6 +215,9 @@ public class MainActivity extends AppActivity
                 case R.id.toolbar_back :
                     if(customWebView.mView.canGoBack())
                         customWebView.mView.goBack();
+                    break;
+                case R.id.toolbar_refresh :
+                    customWebView.mView.reload();
                     break;
             }
         }
