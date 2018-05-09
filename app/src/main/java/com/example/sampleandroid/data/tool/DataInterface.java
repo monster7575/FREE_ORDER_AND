@@ -1,6 +1,7 @@
 package com.example.sampleandroid.data.tool;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.example.sampleandroid.common.tool.Logger;
 import com.example.sampleandroid.common.tool.Utils;
@@ -8,9 +9,16 @@ import com.example.sampleandroid.data.model.BuyerReponse;
 import com.example.sampleandroid.data.model.ResponseData;
 import com.example.sampleandroid.data.model.SellerReponse;
 import com.example.sampleandroid.data.model.ShortData;
+import com.example.sampleandroid.data.model.UploadCon;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -174,6 +182,45 @@ public class DataInterface extends BaseDataInterface {
                 @Override
                 public void onFinalFailure(Call<BuyerReponse> call, Throwable t) {
                     Logger.log(Logger.LogState.E, "onFinalFailure = " + Utils.getStringByObject(t));
+                    if (callback == null)
+                        return;
+                    t.printStackTrace();
+                    callback.onError();
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            callback.onError();
+        }
+    }
+
+    public void uploadFile(Context context, File file, final ResponseCallback callback)
+    {
+        try {
+            List<MultipartBody.Part> map= new ArrayList<>();
+            Logger.log(Logger.LogState.E, "uploadProfile = " + Utils.getStringByObject(file.getName()));
+            RequestBody body = (file == null) ? null : RequestBody.create(MediaType.parse("multipart/form-data"), file);
+            MultipartBody.Part filePart = (file == null) ? null : MultipartBody.Part.createFormData("Filedata", file.getName(), body);
+            map.add(filePart);
+
+            Call<UploadCon> call = service.uploadFile(map);
+
+            call.enqueue(new RetryableCallback<UploadCon>(call, context) {
+                @Override
+                public void onFinalResponse(Call<UploadCon> call, retrofit2.Response<UploadCon> response) {
+                    if (callback == null) return;
+
+                    if (response.isSuccessful()) {
+                        callback.onSuccess(response.body());
+                    } else {
+                        callback.onError();
+                    }
+                }
+
+                @Override
+                public void onFinalFailure(Call<UploadCon> call, Throwable t) {
                     if (callback == null)
                         return;
                     t.printStackTrace();

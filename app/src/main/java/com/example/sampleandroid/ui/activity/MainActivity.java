@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
@@ -26,11 +27,19 @@ import com.example.sampleandroid.common.tool.Logger;
 import com.example.sampleandroid.common.tool.PermissionHelper;
 import com.example.sampleandroid.common.tool.Utils;
 import com.example.sampleandroid.data.config.Constants;
+import com.example.sampleandroid.data.model.ResponseData;
+import com.example.sampleandroid.data.model.UploadCon;
+import com.example.sampleandroid.data.tool.DataInterface;
+import com.example.sampleandroid.data.tool.DataManager;
 import com.example.sampleandroid.ui.view.CustomWebView;
 import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 
@@ -47,6 +56,8 @@ public class MainActivity extends AppActivity
     public CustomWebView customWebView;
     private Listener mListener = new Listener();
     private JSONObject mToobarData;
+    private final static int INTENT_CALL_PROFILE_GALLERY = 3002;
+    private List<MainActivity.FileInfo> fileInfoList = new ArrayList<>();
 
     public interface headerJsonCallback{
         void onReceive(JSONObject jsonObject);
@@ -73,11 +84,43 @@ public class MainActivity extends AppActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == 0)
-        {
-            AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-            audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-            checkPermission();
+       if (resultCode == RESULT_OK) {
+
+            if (requestCode == INTENT_CALL_PROFILE_GALLERY) { // 킷캣.
+                startIndicator("");
+                Uri result = data == null || resultCode != RESULT_OK ? null : data.getData();
+
+                File file = Utils.getAlbum(this, result);
+                if(file == null)
+                {
+                    stopIndicator();
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+                    dialog.setTitle(R.string.app_name).setMessage(getString(R.string.gallery_error)).setPositiveButton(getString(R.string.yes), null).create().show();
+                }
+                else
+                {
+                    fileInfoList.clear();
+                    fileInfoList.add(new MainActivity.FileInfo(result, file));
+
+                    File fileImg = (fileInfoList.size() > 0) ? fileInfoList.get(0).file : null;
+
+                    DataManager.getInstance(this).api.uploadFile(this, fileImg, new DataInterface.ResponseCallback<UploadCon>() {
+                        @Override
+                        public void onSuccess(UploadCon response) {
+                            stopIndicator();
+                            customWebView.initContentView("javascript:setImg('"+response.data.get(0).getPath()+"');");
+                        }
+
+                        @Override
+                        public void onError() {
+
+                            stopIndicator();
+                        }
+                    });
+                }
+
+                return;
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -92,12 +135,7 @@ public class MainActivity extends AppActivity
         if(n.isNotificationPolicyAccessGranted()) {
             AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-        }else{
-            // Ask the user to grant access
-            Intent intent2 = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-             startActivityForResult(intent2, 0);
         }
-
 
         // 네트워크 상태체크
         int networkStatus = Utils.getNetWorkType(context);
@@ -114,9 +152,10 @@ public class MainActivity extends AppActivity
             return;
         }
 
-        checkPermission();
+
         initScreen();
         init();
+        start();
 
     }
 
@@ -136,59 +175,6 @@ public class MainActivity extends AppActivity
         toolbar_refresh.setOnClickListener(mListener);
     }
 
-    private void checkPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-            PermissionHelper.getInstance().setPermissionAndActivity(new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.SEND_SMS}, (Activity) context);
-
-            if(!PermissionHelper.getInstance().checkPermission()) {
-                PermissionHelper.getInstance().requestPermission(0, new PermissionHelper.PermissionCallback() {
-                    @Override
-                    public void onPermissionResult(String[] permissions, int[] grantResults) {
-                        int size = permissions.length;
-
-                        if(size > 0 && permissions[0].equals(Manifest.permission.READ_PHONE_STATE))
-                        {
-                            if(grantResults[0] != PackageManager.PERMISSION_GRANTED)
-                            {
-                                System.exit(0);
-                                return;
-                            }
-                            else
-                            {
-                                start();
-                            }
-                        }
-                        else if(size > 0 && permissions[1].equals(Manifest.permission.SEND_SMS))
-                        {
-                            if(grantResults[1] != PackageManager.PERMISSION_GRANTED)
-                            {
-                                System.exit(0);
-                                return;
-                            }
-                            else
-                            {
-                                start();
-                            }
-                        }
-                        else
-                        {
-                            start();
-                        }
-                    }
-                });
-            }
-            else
-            {
-                start();
-            }
-        }
-        else
-        {
-            start();
-        }
-    }
-
     private void start() {
 
         Logger.log(Logger.LogState.E, "start = ");
@@ -196,6 +182,17 @@ public class MainActivity extends AppActivity
         Logger.log(Logger.LogState.E, "start = " + Utils.getStringByObject(token));
         BasePreference.getInstance(getApplicationContext()).put(BasePreference.GCM_TOKEN, token);
 
+    }
+
+    private class FileInfo{
+        Uri uri;
+        File file;
+
+        public FileInfo(Uri uri, File file)
+        {
+            this.uri = uri;
+            this.file = file;
+        }
     }
 
     public void initToobar(JSONObject jsonObject)

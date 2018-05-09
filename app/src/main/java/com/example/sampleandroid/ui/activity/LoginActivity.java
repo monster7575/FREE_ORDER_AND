@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
@@ -21,8 +22,15 @@ import com.example.sampleandroid.common.tool.Logger;
 import com.example.sampleandroid.common.tool.PermissionHelper;
 import com.example.sampleandroid.common.tool.Utils;
 import com.example.sampleandroid.data.config.Constants;
+import com.example.sampleandroid.data.model.UploadCon;
+import com.example.sampleandroid.data.tool.DataInterface;
+import com.example.sampleandroid.data.tool.DataManager;
 import com.example.sampleandroid.ui.view.CustomWebView;
 import com.google.firebase.iid.FirebaseInstanceId;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by KCH on 2018-04-11.
@@ -32,14 +40,50 @@ public class LoginActivity extends AppActivity {
 
 
     public CustomWebView customWebView;
+    private final static int INTENT_CALL_PROFILE_GALLERY = 3002;
+    private List<LoginActivity.FileInfo> fileInfoList = new ArrayList<>();
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == 0)
-        {
-            AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-            audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-            checkPermission();
+       if (resultCode == RESULT_OK) {
+
+            if (requestCode == INTENT_CALL_PROFILE_GALLERY) { // 킷캣.
+                startIndicator("");
+                Uri result = data == null || resultCode != RESULT_OK ? null : data.getData();
+
+                File file = Utils.getAlbum(this, result);
+                if(file == null)
+                {
+                    stopIndicator();
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(LoginActivity.this);
+                    dialog.setTitle(R.string.app_name).setMessage(getString(R.string.gallery_error)).setPositiveButton(getString(R.string.yes), null).create().show();
+                }
+                else
+                {
+                    fileInfoList.clear();
+                    fileInfoList.add(new LoginActivity.FileInfo(result, file));
+
+                    File fileImg = (fileInfoList.size() > 0) ? fileInfoList.get(0).file : null;
+
+
+
+                    DataManager.getInstance(this).api.uploadFile(this, fileImg, new DataInterface.ResponseCallback<UploadCon>() {
+                        @Override
+                        public void onSuccess(UploadCon response) {
+                            stopIndicator();
+                            customWebView.initContentView("javascript:setImg('"+response.data.get(0).getPath()+"');");
+                        }
+
+                        @Override
+                        public void onError() {
+
+                            stopIndicator();
+                        }
+                    });
+                }
+
+                return;
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -54,12 +98,7 @@ public class LoginActivity extends AppActivity {
         if(n.isNotificationPolicyAccessGranted()) {
             AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-        }else{
-            // Ask the user to grant access
-            Intent intent2 = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-            startActivityForResult(intent2, 0);
         }
-
 
         // 네트워크 상태체크
         int networkStatus = Utils.getNetWorkType(context);
@@ -76,10 +115,10 @@ public class LoginActivity extends AppActivity {
             return;
         }
 
-        checkPermission();
+
         initScreen();
         init();
-
+        start();
     }
 
     private void init()
@@ -93,58 +132,18 @@ public class LoginActivity extends AppActivity {
 
     }
 
-    private void checkPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    private class FileInfo{
+        Uri uri;
+        File file;
 
-            PermissionHelper.getInstance().setPermissionAndActivity(new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.SEND_SMS}, (Activity) context);
-
-            if(!PermissionHelper.getInstance().checkPermission()) {
-                PermissionHelper.getInstance().requestPermission(0, new PermissionHelper.PermissionCallback() {
-                    @Override
-                    public void onPermissionResult(String[] permissions, int[] grantResults) {
-                        int size = permissions.length;
-
-                        if(size > 0 && permissions[0].equals(Manifest.permission.READ_PHONE_STATE))
-                        {
-                            if(grantResults[0] != PackageManager.PERMISSION_GRANTED)
-                            {
-                                System.exit(0);
-                                return;
-                            }
-                            else
-                            {
-                                start();
-                            }
-                        }
-                        else if(size > 0 && permissions[1].equals(Manifest.permission.SEND_SMS))
-                        {
-                            if(grantResults[1] != PackageManager.PERMISSION_GRANTED)
-                            {
-                                System.exit(0);
-                                return;
-                            }
-                            else
-                            {
-                                start();
-                            }
-                        }
-                        else
-                        {
-                            start();
-                        }
-                    }
-                });
-            }
-            else
-            {
-                start();
-            }
-        }
-        else
+        public FileInfo(Uri uri, File file)
         {
-            start();
+            this.uri = uri;
+            this.file = file;
         }
     }
+
+
 
     private void start() {
 

@@ -44,6 +44,8 @@ import com.example.sampleandroid.data.model.SellerReponse;
 import com.example.sampleandroid.data.model.SellerVO;
 import com.example.sampleandroid.data.tool.DataInterface;
 import com.example.sampleandroid.data.tool.DataManager;
+import com.example.sampleandroid.ui.activity.IntroActivity;
+import com.example.sampleandroid.ui.activity.LoginActivity;
 import com.example.sampleandroid.ui.activity.MainActivity;
 
 import org.json.JSONException;
@@ -191,11 +193,23 @@ public class CustomWebView {
                             public void onSuccess(SellerReponse response) {
                                 Logger.log(Logger.LogState.D, "savelog success");
 
-                                SellerData.getInstance().setCurrentSellerVO(base, response.data.get(0));
+                                if(response.data.size() > 0)
+                                {
+                                    SellerData.getInstance().setCurrentSellerVO(base, response.data.get(0));
 
-                                Intent intent = new Intent(base, MainActivity.class);
-                                base.startActivity(intent);
-                                base.finish();
+                                    Intent intent = new Intent(base, MainActivity.class);
+                                    base.startActivity(intent);
+                                    base.finish();
+                                }
+                                else
+                                {
+                                    Toast.makeText(base, "매장 승인 전입니다. 관리자에게 문의하여 주세요." + phonenb, Toast.LENGTH_SHORT).show();
+                                    BasePreference.getInstance(base).removeAll();
+                                    Intent intent = new Intent(base, IntroActivity.class);
+                                    base.startActivity(intent);
+                                    base.finish();
+                                }
+
                             }
 
                             @Override
@@ -257,6 +271,16 @@ public class CustomWebView {
                 else if(action.equals("stop_loading"))
                 {
                     base.stopIndicator();
+                    return true;
+                }
+                else if(action.equals("gallery"))
+                {
+                    callGallery();
+                    return true;
+                }
+                else if(action.equals("finish"))
+                {
+                    base.finish();
                     return true;
                 }
 

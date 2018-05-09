@@ -12,9 +12,7 @@ public class Constants {
     public static final String TEST_DOMAIN = "order.favinet.co.kr";
     public static final String DOING_DOMAIN = IS_DEV ? TEST_DOMAIN : REAL_DOMAIN;
     public static final String BASE_URL = "http://" + Constants.DOING_DOMAIN;
-    public static final String MAIN_URL = "http://" + Constants.DOING_DOMAIN + "/main?uid=%s";
-    public static final String SHORT_APIKEY = "AIzaSyB2Di7GVIBLJhURbklprv1B7pcLoRXMChU";
-    public static final String FCM_APIKEY = "AIzaSyDEXoZQXqXlgUPq4BjaSJ_RV5ArvK478Gc";
+    public static final int CALL_OUT_TIME = 10000;
 
 
     public static final String INTENT_DATA_KEY = "INTENT_DATA_KEY";
@@ -25,6 +23,7 @@ public class Constants {
         public static final String API_SHORT_URL = "/srv/seller/api/shorturl";
         public static final String API_SELLER_MSG_INSERT = "/srv/sellmsglog/api/insert";
         public static final String API_BUYER_SELECT = "/srv/buyer/api/select";
+        public static final String API_UPFILE = "/srv/upfile/api/save";
     }
 
     public final class MENU_LINKS {

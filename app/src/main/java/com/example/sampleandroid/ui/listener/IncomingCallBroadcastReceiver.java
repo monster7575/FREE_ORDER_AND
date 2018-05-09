@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Build;
+import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
@@ -15,6 +16,7 @@ import android.util.Log;
 import com.example.sampleandroid.common.preference.BasePreference;
 import com.example.sampleandroid.common.tool.Logger;
 import com.example.sampleandroid.common.tool.Utils;
+import com.example.sampleandroid.data.config.Constants;
 import com.example.sampleandroid.data.model.BuyerReponse;
 import com.example.sampleandroid.data.model.SellerData;
 import com.example.sampleandroid.data.model.SellerReponse;
@@ -39,7 +41,7 @@ public class IncomingCallBroadcastReceiver extends BroadcastReceiver{
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
-    public void onReceive(final Context context, Intent intent) {
+    public void onReceive(final Context context, final Intent intent) {
 
         String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
         Log.e("before  : ", state);
@@ -54,37 +56,45 @@ public class IncomingCallBroadcastReceiver extends BroadcastReceiver{
         Log.e("EXTRA_STATE_RINGING  : ", "" + TelephonyManager.EXTRA_STATE_RINGING);
         if(TelephonyManager.EXTRA_STATE_RINGING.equals(state))
         {
-
-            SellerVO sellerVO = BasePreference.getInstance(context).getObject(BasePreference.SELLER_DATA, SellerVO.class);
-            final String idx = String.valueOf(sellerVO.getIdx());
-            final String content = sellerVO.getContent();
-            String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
-            final String phoneNumber = PhoneNumberUtils.formatNumber(incomingNumber);
-            Log.e("phoneNumber : ", phoneNumber);
-
-            HashMap<String, String> params = new HashMap<>();
-            params.put("phonenb", phoneNumber);
-            DataManager.getInstance(context).api.getBuyer(context, params, new DataInterface.ResponseCallback<BuyerReponse>() {
+            new Handler().postDelayed(new Runnable() {
                 @Override
-                public void onSuccess(BuyerReponse response) {
+                public void run() {
 
-                    Log.e("getBuyer  : ", "" + Utils.getStringByObject(response));
+                    SellerVO sellerVO = BasePreference.getInstance(context).getObject(BasePreference.SELLER_DATA, SellerVO.class);
+                    final String idx = String.valueOf(sellerVO.getIdx());
+                    final String content = sellerVO.getContent();
+                    String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
+                    final String phoneNumber = PhoneNumberUtils.formatNumber(incomingNumber);
+                    Log.e("phoneNumber : ", phoneNumber);
 
-                    String bobjid = String.valueOf(response.data.get(0).getIdx());
+                    HashMap<String, String> params = new HashMap<>();
+                    params.put("phonenb", phoneNumber);
+                    DataManager.getInstance(context).api.getBuyer(context, params, new DataInterface.ResponseCallback<BuyerReponse>() {
+                        @Override
+                        public void onSuccess(BuyerReponse response) {
 
-                    Intent serviceIntent = new Intent(context, CallingService.class);
-                    serviceIntent.putExtra(CallingService.EXTRA_CALL_NUMBER, phoneNumber);
-                    serviceIntent.putExtra(CallingService.EXTRA_SELLER_IDX, idx);
-                    serviceIntent.putExtra(CallingService.EXTRA_SELLER_CONTENT, content);
-                    serviceIntent.putExtra(CallingService.EXTRA_BUYER_IDX, bobjid);
-                    context.startService(serviceIntent);
+                            Log.e("getBuyer  : ", "" + Utils.getStringByObject(response));
+
+                            String bobjid = String.valueOf(response.data.get(0).getIdx());
+
+                            Intent serviceIntent = new Intent(context, CallingService.class);
+                            serviceIntent.putExtra(CallingService.EXTRA_CALL_NUMBER, phoneNumber);
+                            serviceIntent.putExtra(CallingService.EXTRA_SELLER_IDX, idx);
+                            serviceIntent.putExtra(CallingService.EXTRA_SELLER_CONTENT, content);
+                            serviceIntent.putExtra(CallingService.EXTRA_BUYER_IDX, bobjid);
+                            context.startService(serviceIntent);
+                        }
+
+                        @Override
+                        public void onError() {
+                            Logger.log(Logger.LogState.E, "savelog fail");
+                        }
+                    });
+
+
                 }
+            }, Constants.CALL_OUT_TIME);
 
-                @Override
-                public void onError() {
-                    Logger.log(Logger.LogState.E, "savelog fail");
-                }
-            });
         }
     }
 }

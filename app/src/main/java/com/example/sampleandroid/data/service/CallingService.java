@@ -109,7 +109,7 @@ public class CallingService extends Service{
             }
         });
 
-        return START_NOT_STICKY ;
+        return START_NOT_STICKY   ;
     }
 
     private void getShortUrl(final String phoneNumber, String sellerIdx, final String sellerContent)
@@ -123,7 +123,7 @@ public class CallingService extends Service{
 
                 String shortUrl = response.getId();
                 sendSms(phoneNumber, sellerContent, shortUrl);
-                stopSelf();
+
             }
 
             @Override
@@ -135,14 +135,15 @@ public class CallingService extends Service{
 
     private void sendSms(String phoneNumber, String sellerContent, String shortUrl)
     {
+        Logger.log(Logger.LogState.E, "sendSms");
         String smsText = sellerContent + shortUrl;
         PendingIntent sentIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT_ACTION"), 0);
         PendingIntent deliveredIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_DELIVERED_ACTION"), 0);
 
-        registerReceiver(new BroadcastReceiver() {
+        final BroadcastReceiver br = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-
+                Logger.log(Logger.LogState.E, "BroadcastReceiver br");
                 //전화 끊기
                 try{
 
@@ -151,10 +152,12 @@ public class CallingService extends Service{
                     Method method = cls.getDeclaredMethod("getITelephony");
                     method.setAccessible(true);
                     ITelephony iTelephony = (ITelephony) method.invoke(telephonyManager);
-                   // iTelephony.endCall();
+                    iTelephony.endCall();
+                    Logger.log(Logger.LogState.E, "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
                 }catch (Exception e)
                 {
+                    Logger.log(Logger.LogState.E, "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
                     e.printStackTrace();
                 }
 
@@ -162,6 +165,7 @@ public class CallingService extends Service{
                     case Activity.RESULT_OK:
                         // 전송 성공
                         Toast.makeText(getApplicationContext(), "전송 완료", Toast.LENGTH_SHORT).show();
+                         stopSelf();
                         break;
                     case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
                         // 전송 실패
@@ -181,12 +185,14 @@ public class CallingService extends Service{
                         break;
                 }
             }
-        }, new IntentFilter("SMS_SENT_ACTION"));
+        };
+        registerReceiver(br, new IntentFilter("SMS_SENT_ACTION"));
 
-        registerReceiver(new BroadcastReceiver() {
+
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-
+                Logger.log(Logger.LogState.E, "BroadcastReceiver broadcastReceiver");
 
                 switch (getResultCode()){
                     case Activity.RESULT_OK:
@@ -199,7 +205,8 @@ public class CallingService extends Service{
                         break;
                 }
             }
-        }, new IntentFilter("SMS_DELIVERED_ACTION"));
+        };
+        registerReceiver(broadcastReceiver, new IntentFilter("SMS_DELIVERED_ACTION"));
 
         SmsManager mSmsManager = SmsManager.getDefault();
         mSmsManager.sendTextMessage(phoneNumber, null, smsText, sentIntent, deliveredIntent);
