@@ -1,5 +1,6 @@
 package com.favinet.freeorder.ui.listener;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -44,60 +45,66 @@ public class IncomingCallBroadcastReceiver extends BroadcastReceiver{
     public void onReceive(final Context context, final Intent intent) {
 
         final SellerVO sellerVO = BasePreference.getInstance(context).getObject(BasePreference.SELLER_DATA, SellerVO.class);
-        String useyn = sellerVO.getUseyn();
-        String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
-        Log.e("before  : ", state);
-        if(state.equals(mLastState))
+        if(sellerVO != null)
         {
-            return;
-        }
-        else
-        {
-            mLastState = state;
-        }
-        Log.e("EXTRA_STATE_RINGING  : ", "" + TelephonyManager.EXTRA_STATE_RINGING);
-        Log.e("EXTRA_STATE_RINGING  : ", "" + useyn);
-        if(TelephonyManager.EXTRA_STATE_RINGING.equals(state) && useyn.equals("Y"))
-        {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
+            String useyn = sellerVO.getUseyn();
+            final String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
+            Log.e("before  : ", state);
+            if(state.equals(mLastState))
+            {
+                return;
+            }
+            else
+            {
+                mLastState = state;
+            }
+            Log.e("EXTRA_STATE_RINGING  : ", "" + TelephonyManager.EXTRA_STATE_RINGING);
+            Log.e("EXTRA_STATE_RINGING  : ", "" + useyn);
+            if(TelephonyManager.EXTRA_STATE_RINGING.equals(state) && useyn.equals("Y"))
+            {
+                new Handler().postDelayed(new Runnable() {
+                    @SuppressLint("LongLogTag")
+                    @Override
+                    public void run() {
+                        Log.e("EXTRA_STATE_RINGING  222: ", "" + state);
+                        Log.e("EXTRA_STATE_RINGING  222: ", "" + mLastState);
+                        if(TelephonyManager.EXTRA_STATE_RINGING.equals(mLastState))
+                        {
+                            final String idx = String.valueOf(sellerVO.getIdx());
+                            final String content = sellerVO.getContent();
+                            String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
+                            final String phoneNumber = PhoneNumberUtils.formatNumber(incomingNumber);
+                            Log.e("phoneNumber : ", phoneNumber);
 
+                            HashMap<String, String> params = new HashMap<>();
+                            params.put("phonenb", phoneNumber);
+                            DataManager.getInstance(context).api.getBuyer(context, params, new DataInterface.ResponseCallback<BuyerReponse>() {
+                                @Override
+                                public void onSuccess(BuyerReponse response) {
 
-                    final String idx = String.valueOf(sellerVO.getIdx());
-                    final String content = sellerVO.getContent();
-                    String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
-                    final String phoneNumber = PhoneNumberUtils.formatNumber(incomingNumber);
-                    Log.e("phoneNumber : ", phoneNumber);
+                                    Log.e("getBuyer  : ", "" + Utils.getStringByObject(response));
 
-                    HashMap<String, String> params = new HashMap<>();
-                    params.put("phonenb", phoneNumber);
-                    DataManager.getInstance(context).api.getBuyer(context, params, new DataInterface.ResponseCallback<BuyerReponse>() {
-                        @Override
-                        public void onSuccess(BuyerReponse response) {
+                                    String bobjid = String.valueOf(response.data.get(0).getIdx());
 
-                            Log.e("getBuyer  : ", "" + Utils.getStringByObject(response));
+                                    Intent serviceIntent = new Intent(context, CallingService.class);
+                                    serviceIntent.putExtra(CallingService.EXTRA_CALL_NUMBER, phoneNumber);
+                                    serviceIntent.putExtra(CallingService.EXTRA_SELLER_IDX, idx);
+                                    serviceIntent.putExtra(CallingService.EXTRA_SELLER_CONTENT, content);
+                                    serviceIntent.putExtra(CallingService.EXTRA_BUYER_IDX, bobjid);
+                                    context.startService(serviceIntent);
+                                }
 
-                            String bobjid = String.valueOf(response.data.get(0).getIdx());
-
-                            Intent serviceIntent = new Intent(context, CallingService.class);
-                            serviceIntent.putExtra(CallingService.EXTRA_CALL_NUMBER, phoneNumber);
-                            serviceIntent.putExtra(CallingService.EXTRA_SELLER_IDX, idx);
-                            serviceIntent.putExtra(CallingService.EXTRA_SELLER_CONTENT, content);
-                            serviceIntent.putExtra(CallingService.EXTRA_BUYER_IDX, bobjid);
-                            context.startService(serviceIntent);
+                                @Override
+                                public void onError() {
+                                    Logger.log(Logger.LogState.E, "savelog fail");
+                                }
+                            });
                         }
+                    }
+                }, Constants.CALL_OUT_TIME);
 
-                        @Override
-                        public void onError() {
-                            Logger.log(Logger.LogState.E, "savelog fail");
-                        }
-                    });
-
-
-                }
-            }, Constants.CALL_OUT_TIME);
-
+            }
         }
+
     }
 }
