@@ -229,7 +229,7 @@ public class CustomWebView {
                     try
                     {final String decodedString = URLDecoder.decode(content, "UTF-8");
                         Logger.log(Logger.LogState.E, "content = " + decodedString);
-
+                        final String smsSendNum = Utils.queryToMap(url).get("phonenb");
                         SellerVO sellerVO = BasePreference.getInstance(base).getObject(BasePreference.SELLER_DATA, SellerVO.class);
                         String sellerIdx = String.valueOf(sellerVO.getIdx());
                         final String phonenb = sellerVO.getPhonenb();
@@ -244,7 +244,7 @@ public class CustomWebView {
 
                                 String result = response.getResult();
                                 Logger.log(Logger.LogState.E, "result = " + Utils.getStringByObject(result));
-                                sendSms(phonenb, decodedString);
+                                sendSms(smsSendNum, decodedString);
                             }
 
                             @Override
