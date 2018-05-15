@@ -30,6 +30,7 @@ import com.favinet.freeorder.data.tool.DataManager;
 import com.favinet.freeorder.ui.activity.MainActivity;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import butterknife.ButterKnife;
@@ -135,10 +136,17 @@ public class CallingService extends Service{
 
     private void sendSms(String phoneNumber, String sellerContent, String shortUrl)
     {
+        SmsManager mSmsManager = SmsManager.getDefault();
         Logger.log(Logger.LogState.E, "sendSms");
         String smsText = sellerContent + shortUrl;
-        PendingIntent sentIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT_ACTION"), 0);
-        PendingIntent deliveredIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_DELIVERED_ACTION"), 0);
+        ArrayList<String> smsTextList = mSmsManager.divideMessage(smsText);
+        //smsText.add(sellerContent + shortUrl);
+        //PendingIntent sentIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT_ACTION"), 0);
+        //PendingIntent deliveredIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_DELIVERED_ACTION"), 0);
+        ArrayList<PendingIntent> sentIntent =  new ArrayList<>();
+        sentIntent.add(PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT_ACTION"), 0));
+        ArrayList<PendingIntent> deliveredIntent =  new ArrayList<>();
+        deliveredIntent.add(PendingIntent.getBroadcast(this, 0, new Intent("SMS_DELIVERED_ACTION"), 0));
 
         final BroadcastReceiver br = new BroadcastReceiver() {
             @Override
@@ -208,8 +216,8 @@ public class CallingService extends Service{
         };
         registerReceiver(broadcastReceiver, new IntentFilter("SMS_DELIVERED_ACTION"));
 
-        SmsManager mSmsManager = SmsManager.getDefault();
-        mSmsManager.sendTextMessage(phoneNumber, null, smsText, sentIntent, deliveredIntent);
+
+        mSmsManager.sendMultipartTextMessage(phoneNumber, null, smsTextList, sentIntent, deliveredIntent);
 
 
 
