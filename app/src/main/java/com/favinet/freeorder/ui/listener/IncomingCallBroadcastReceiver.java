@@ -101,7 +101,7 @@ public class IncomingCallBroadcastReceiver extends BroadcastReceiver{
                             });
                         }
                     }
-                }, Constants.CALL_OUT_TIME);
+                }, sellerVO.getSec()*1000);
 
             }
         }
