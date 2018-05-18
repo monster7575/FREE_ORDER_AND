@@ -157,11 +157,13 @@ public class CustomWebView {
             final String link = Utils.queryToMap(url).get("link");
             String content = Utils.queryToMap(url).get("content");
             final String bobjid = Utils.queryToMap(url).get("bobjid");
+            final String phonenb = Utils.queryToMap(url).get("phonenb");
 
             Logger.log(Logger.LogState.E, "action = " + action);
             Logger.log(Logger.LogState.E, "uobjid = " + uobjid);
             Logger.log(Logger.LogState.E, "bobjid = " + bobjid);
             Logger.log(Logger.LogState.E, "link = " + link);
+            Logger.log(Logger.LogState.E, "phonenb = " + phonenb);
 
             if(action != null)
             {
@@ -249,7 +251,6 @@ public class CustomWebView {
                         final String smsSendNum = Utils.queryToMap(url).get("phonenb");
                         SellerVO sellerVO = BasePreference.getInstance(base).getObject(BasePreference.SELLER_DATA, SellerVO.class);
                         final String sellerIdx = String.valueOf(sellerVO.getIdx());
-                        final String phonenb = sellerVO.getPhonenb();
                         final HashMap<String, String> params = new HashMap<>();
                         params.put("content", decodedString);
                         params.put("bobjid", bobjid);
@@ -299,6 +300,13 @@ public class CustomWebView {
                 else if(action.equals("finish"))
                 {
                     base.finish();
+                    return true;
+                }
+                else if(action.equals("call"))
+                {
+                    String tel = "tel: " + phonenb.replace("-", "");
+                    Logger.log(Logger.LogState.E, "TEL :" + tel);
+                    base.startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
                     return true;
                 }
 
