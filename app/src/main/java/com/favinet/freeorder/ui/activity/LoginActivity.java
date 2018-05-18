@@ -1,25 +1,24 @@
 package com.favinet.freeorder.ui.activity;
 
-import android.Manifest;
-import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.favinet.freeorder.R;
 import com.favinet.freeorder.common.preference.BasePreference;
 import com.favinet.freeorder.common.tool.Logger;
-import com.favinet.freeorder.common.tool.PermissionHelper;
 import com.favinet.freeorder.common.tool.Utils;
 import com.favinet.freeorder.data.config.Constants;
 import com.favinet.freeorder.data.model.UploadCon;
@@ -28,9 +27,13 @@ import com.favinet.freeorder.data.tool.DataManager;
 import com.favinet.freeorder.ui.view.CustomWebView;
 import com.google.firebase.iid.FirebaseInstanceId;
 
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import butterknife.BindView;
 
 /**
  * Created by KCH on 2018-04-11.
@@ -38,10 +41,39 @@ import java.util.List;
 
 public class LoginActivity extends AppActivity {
 
-
     public CustomWebView customWebView;
     private final static int INTENT_CALL_PROFILE_GALLERY = 3002;
     private List<LoginActivity.FileInfo> fileInfoList = new ArrayList<>();
+    @BindView(R.id.toolbar_header) Toolbar toolbar_header;
+    @BindView(R.id.toolbar_title) TextView toolbar_title;
+    @BindView(R.id.toolbar_back) ImageButton toolbar_back;
+    private LoginActivity.Listener mListener = new LoginActivity.Listener();
+
+
+    private JSONObject mToobarData;
+
+    public interface headerJsonCallback{
+        void onReceive(boolean isShow);
+    }
+
+    public interface titleCallback{
+        void onReceive(String title);
+    }
+
+    private LoginActivity.headerJsonCallback mHeaderJsonCallback = new LoginActivity.headerJsonCallback() {
+        @Override
+        public void onReceive(boolean isShow) {
+
+            initToobar(isShow);
+        }
+    };
+
+    private LoginActivity.titleCallback mTitleCallback = new LoginActivity.titleCallback() {
+        @Override
+        public void onReceive(String title) {
+            toolbar_title.setText(title);
+        }
+    };
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -64,8 +96,6 @@ public class LoginActivity extends AppActivity {
                     fileInfoList.add(new LoginActivity.FileInfo(result, file));
 
                     File fileImg = (fileInfoList.size() > 0) ? fileInfoList.get(0).file : null;
-
-
 
                     DataManager.getInstance(this).api.uploadFile(this, fileImg, new DataInterface.ResponseCallback<UploadCon>() {
                         @Override
@@ -124,12 +154,15 @@ public class LoginActivity extends AppActivity {
     private void init()
     {
         customWebView = new CustomWebView(this, this.findViewById(R.id.content).getRootView());
+        customWebView.setWebHeaderLoginCallback(mHeaderJsonCallback);
+        customWebView.setWebTitleLoginCallback(mTitleCallback);
         customWebView.initContentView(Constants.MENU_LINKS.SELLER_LOGIN);
     }
 
     public void initScreen()
     {
-
+        setSupportActionBar(toolbar_header);
+        toolbar_back.setOnClickListener(mListener);
     }
 
     private class FileInfo{
@@ -143,7 +176,19 @@ public class LoginActivity extends AppActivity {
         }
     }
 
-
+    public void initToobar(boolean isShow)
+    {
+        toolbar_header.findViewById(R.id.toolbar_back).setVisibility(View.GONE);
+        toolbar_back.setOnClickListener(mListener);
+        toolbar_header.findViewById(R.id.toolbar_refresh).setVisibility(View.GONE);
+        toolbar_header.findViewById(R.id.toolbar_setting).setVisibility(View.GONE);
+        if(isShow)
+        {
+            toolbar_header.setVisibility(View.VISIBLE);
+        }
+        else
+            toolbar_header.setVisibility(View.GONE);
+    }
 
     private void start() {
 

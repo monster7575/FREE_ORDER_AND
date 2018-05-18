@@ -1,12 +1,9 @@
 package com.favinet.freeorder.ui.activity;
 
-import android.Manifest;
-import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -14,7 +11,6 @@ import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageButton;
@@ -24,10 +20,8 @@ import com.beardedhen.androidbootstrap.BootstrapButton;
 import com.favinet.freeorder.R;
 import com.favinet.freeorder.common.preference.BasePreference;
 import com.favinet.freeorder.common.tool.Logger;
-import com.favinet.freeorder.common.tool.PermissionHelper;
 import com.favinet.freeorder.common.tool.Utils;
 import com.favinet.freeorder.data.config.Constants;
-import com.favinet.freeorder.data.model.ResponseData;
 import com.favinet.freeorder.data.model.UploadCon;
 import com.favinet.freeorder.data.tool.DataInterface;
 import com.favinet.freeorder.data.tool.DataManager;
@@ -47,10 +41,10 @@ public class MainActivity extends AppActivity
 {
 
     @BindView(R.id.toolbar_header) Toolbar toolbar_header;
-    @BindView(R.id.toolbar_setting) BootstrapButton toolbar_setting;
+    @BindView(R.id.toolbar_setting) ImageButton toolbar_setting;
     @BindView(R.id.toolbar_title) TextView toolbar_title;
     @BindView(R.id.toolbar_back) ImageButton toolbar_back;
-    @BindView(R.id.toolbar_refresh) BootstrapButton toolbar_refresh;
+    @BindView(R.id.toolbar_refresh) ImageButton toolbar_refresh;
 
 
     public CustomWebView customWebView;
@@ -232,8 +226,20 @@ public class MainActivity extends AppActivity
                     customWebView.initContentView(Constants.MENU_LINKS.SELLER_SETTING);
                     break;
                 case R.id.toolbar_back :
-                    if(customWebView.mView.canGoBack())
-                        customWebView.mView.goBack();
+                    Logger.log(Logger.LogState.E, "toolbar_back = " + customWebView.mView.getUrl());
+                    if(customWebView.mView.getUrl().indexOf("/srv/seller/mobile/update") > -1)
+                    {
+                        customWebView.mView.loadUrl("javascript:location.replace('http://order.favinet.co.kr/srv/seller/mobile/main/setting');");
+                    }
+                    else if(customWebView.mView.getUrl().indexOf("/srv/seller/mobile/main/setting") > -1)
+                    {
+                        customWebView.mView.loadUrl("javascript:location.replace('http://order.favinet.co.kr/srv/buyer/mobile/list');");
+                    }
+                    else
+                    {
+                        if(customWebView.mView.canGoBack())
+                            customWebView.mView.goBack();
+                    }
                     break;
                 case R.id.toolbar_refresh :
                     customWebView.mView.reload();

@@ -10,6 +10,8 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <include android:id="@+id/toolbar_header"
+            layout="@layout/custom_toolbar"/>
 
         <FrameLayout
             android:id="@+id/webview_frame"

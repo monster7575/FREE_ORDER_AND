@@ -50,11 +50,11 @@ public class Utils {
 
     /**
      * Object convert to json String
+     *
      * @param obj
      * @return
      */
-    public static String getStringByObject(Object obj)
-    {
+    public static String getStringByObject(Object obj) {
         Gson gson = new Gson();
         String json = gson.toJson(obj);
 
@@ -63,10 +63,11 @@ public class Utils {
 
     /**
      * 이메일 포맷 체크
+     *
      * @param email
      * @return
      */
-    public static boolean checkEmail(String email){
+    public static boolean checkEmail(String email) {
 
         String regex = "^[_a-zA-Z0-9-\\.]+@[\\.a-zA-Z0-9-]+\\.[a-zA-Z]+$";
         Pattern p = Pattern.compile(regex);
@@ -77,17 +78,18 @@ public class Utils {
 
     /**
      * 비밀번호 포맷 체크(6자리이상, 숫자, 영문자 1자리 이상 포함)
+     *
      * @param password
      * @return
      */
     public static final Pattern VALID_PASSWOLD_REGEX_ALPHA_NUM = Pattern.compile("^(?=.*[a-zA-Z]+)(?=.*[!@#$%^*+=-]|.*[0-9]+).{6,16}$");
 
     public static boolean validatePassword(String pwStr) {
-        Matcher matcher = VALID_PASSWOLD_REGEX_ALPHA_NUM.matcher(pwStr); return matcher.matches();
+        Matcher matcher = VALID_PASSWOLD_REGEX_ALPHA_NUM.matcher(pwStr);
+        return matcher.matches();
     }
 
-    public static String getParseUrl(String url)
-    {
+    public static String getParseUrl(String url) {
         //Logger.log(Logger.LogState.E, "getParseUrl  = " + url);
         String result = "";
         /*
@@ -105,22 +107,18 @@ public class Utils {
             }
         }
         */
-        if(url.indexOf("http") > -1)
-        {
+        if (url.indexOf("http") > -1) {
             String[] splitUrl = url.split("http");
-            if(splitUrl.length > 0)
-            {
+            if (splitUrl.length > 0) {
                 //Logger.log(Logger.LogState.E, "getParseUrl  = " + splitUrl[1]);
-                result = "http"+ splitUrl[1];
+                result = "http" + splitUrl[1];
             }
         }
-        if(url.indexOf("https") > -1)
-        {
+        if (url.indexOf("https") > -1) {
             String[] splitUrl = url.split("https");
-            if(splitUrl.length > 0)
-            {
+            if (splitUrl.length > 0) {
                 //Logger.log(Logger.LogState.E, "getParseUrl  = " + splitUrl[1]);
-                result = "https"+ splitUrl[1];
+                result = "https" + splitUrl[1];
             }
         }
         //Logger.log(Logger.LogState.E, "getParseUrl  result = " + result);
@@ -144,7 +142,7 @@ public class Utils {
         Cursor pCursor = context.getContentResolver().query(uri, null, null, null, null);
         String pDisplay = "";
 
-        if(pCursor == null)
+        if (pCursor == null)
             return null;
 
         while (pCursor.moveToNext()) {
@@ -216,36 +214,32 @@ public class Utils {
         return netType;
     }
 
-    public static void changeStatusColor(BaseActivity activity, int color)
-    {
+    public static void changeStatusColor(BaseActivity activity, int color) {
         Window window = activity.getWindow();
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             window.setStatusBarColor(ContextCompat.getColor(activity, color));
     }
 
-    public static Map<String, String> queryToMap(String url)
-    {
+    public static Map<String, String> queryToMap(String url) {
         Map<String, String> result = new HashMap<String, String>();
         String[] queryArray = url.split("\\?");
         String query = (queryArray.length > 1) ? queryArray[1] : "";
         for (String param : query.split("&")) {
             String pair[] = param.split("=");
-            if (pair.length>1) {
+            if (pair.length > 1) {
                 result.put(pair[0], pair[1]);
-            }else{
+            } else {
                 result.put(pair[0], "");
             }
         }
         return result;
     }
 
-    public static String decode(String value, String typ)
-    {
+    public static String decode(String value, String typ) {
         String result = "";
-        try
-        {
+        try {
             result = URLDecoder.decode(value, typ);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -254,11 +248,9 @@ public class Utils {
         return result;
     }
 
-    public static String encode(String value)
-    {
+    public static String encode(String value) {
         String result = "";
-        try
-        {
+        try {
             result = URLEncoder.encode(value, "EUC-KR");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -267,8 +259,7 @@ public class Utils {
         return result;
     }
 
-    public static String getKeyHash(BaseActivity base)
-    {
+    public static String getKeyHash(BaseActivity base) {
         String keyHash = "";
         try {
             PackageInfo info = base.getPackageManager().getPackageInfo(base.getPackageName(), PackageManager.GET_SIGNATURES);
@@ -290,22 +281,50 @@ public class Utils {
     @SuppressLint("MissingPermission")
     public static String getPhoneNumber(Context context) {
         TelephonyManager telephony = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        String phoneNumber ="";
+        String phoneNumber = "";
 
         try {
             if (telephony.getLine1Number() != null) {
                 phoneNumber = telephony.getLine1Number();
-            }
-            else {
+            } else {
                 if (telephony.getSimSerialNumber() != null) {
                     phoneNumber = telephony.getSimSerialNumber();
                 }
             }
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         return phoneNumber;
     }
+
+
+    /**
+     * 핸드폰 번호 유효성 검사
+     */
+    public static boolean isValidCellPhoneNumber(String cellphoneNumber) {
+
+        boolean returnValue = false;
+
+        Log.i("cell", cellphoneNumber);
+
+        String regex = "^\\s*(010|011|012|013|014|015|016|017|018|019)(-|\\)|\\s)*(\\d{3,4})(-|\\s)*(\\d{4})\\s*$";
+
+        Pattern p = Pattern.compile(regex);
+
+        Matcher m = p.matcher(cellphoneNumber);
+
+        if (m.matches()) {
+
+            returnValue = true;
+
+        }
+
+        return returnValue;
+
+    }
+
 }
+
+
+

@@ -86,6 +86,13 @@ public class CallingService extends Service{
         final String sellerContent = intent.getStringExtra(EXTRA_SELLER_CONTENT);
         final String bobjid = intent.getStringExtra(EXTRA_BUYER_IDX);
 
+        getShortUrl(phoneNumber, sellerIdx, sellerContent, bobjid);
+
+        return START_NOT_STICKY   ;
+    }
+
+    private void insertSellerMsg(final String sellerContent, String bobjid, String sellerIdx, final String phoneNumber)
+    {
         final HashMap<String, String> params = new HashMap<>();
         params.put("content", sellerContent);
         params.put("bobjid", bobjid);
@@ -98,7 +105,7 @@ public class CallingService extends Service{
                 String result = response.getResult();
                 if(result.equals("1"))
                 {
-                    getShortUrl(phoneNumber, sellerIdx, sellerContent);
+                    sendSms(phoneNumber, sellerContent);
                 }
                 else
                     Logger.log(Logger.LogState.E, "insertSellerMsg fail");
@@ -110,10 +117,9 @@ public class CallingService extends Service{
             }
         });
 
-        return START_NOT_STICKY   ;
     }
 
-    private void getShortUrl(final String phoneNumber, String sellerIdx, final String sellerContent)
+    private void getShortUrl(final String phoneNumber, final String sellerIdx, final String sellerContent, final String bobjid)
     {
         HashMap<String, String> params = new HashMap<>();
         params.put("longUrl", String.format(Constants.MENU_LINKS.ORDER_URL, phoneNumber, sellerIdx));
@@ -123,7 +129,7 @@ public class CallingService extends Service{
                 Logger.log(Logger.LogState.D, "savelog success");
 
                 String shortUrl = response.getId();
-                sendSms(phoneNumber, sellerContent, shortUrl);
+                insertSellerMsg(sellerContent+ shortUrl, bobjid, sellerIdx, phoneNumber);
 
             }
 
@@ -134,19 +140,21 @@ public class CallingService extends Service{
         });
     }
 
-    private void sendSms(String phoneNumber, String sellerContent, String shortUrl)
+    private void sendSms(String phoneNumber, String sellerContent)
     {
         SmsManager mSmsManager = SmsManager.getDefault();
         Logger.log(Logger.LogState.E, "sendSms");
-        String smsText = sellerContent + shortUrl;
+        String smsText = sellerContent;
         ArrayList<String> smsTextList = mSmsManager.divideMessage(smsText);
-        //smsText.add(sellerContent + shortUrl);
-        //PendingIntent sentIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT_ACTION"), 0);
-        //PendingIntent deliveredIntent = PendingIntent.getBroadcast(this, 0, new Intent("SMS_DELIVERED_ACTION"), 0);
+        int  numPart = smsTextList.size();
         ArrayList<PendingIntent> sentIntent =  new ArrayList<>();
-        sentIntent.add(PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT_ACTION"), 0));
         ArrayList<PendingIntent> deliveredIntent =  new ArrayList<>();
-        deliveredIntent.add(PendingIntent.getBroadcast(this, 0, new Intent("SMS_DELIVERED_ACTION"), 0));
+
+        for(int i = 0; i < numPart; i++)
+        {
+            sentIntent.add(PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT_ACTION"), 0));
+            deliveredIntent.add(PendingIntent.getBroadcast(this, 0, new Intent("SMS_DELIVERED_ACTION"), 0));
+        }
 
         final BroadcastReceiver br = new BroadcastReceiver() {
             @Override
@@ -215,8 +223,6 @@ public class CallingService extends Service{
             }
         };
         registerReceiver(broadcastReceiver, new IntentFilter("SMS_DELIVERED_ACTION"));
-
-
         mSmsManager.sendMultipartTextMessage(phoneNumber, null, smsTextList, sentIntent, deliveredIntent);
 
 

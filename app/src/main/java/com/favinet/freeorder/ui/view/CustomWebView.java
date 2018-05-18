@@ -42,6 +42,7 @@ import com.favinet.freeorder.data.model.ResponseData;
 import com.favinet.freeorder.data.model.SellerData;
 import com.favinet.freeorder.data.model.SellerReponse;
 import com.favinet.freeorder.data.model.SellerVO;
+import com.favinet.freeorder.data.model.ShortData;
 import com.favinet.freeorder.data.tool.DataInterface;
 import com.favinet.freeorder.data.tool.DataManager;
 import com.favinet.freeorder.ui.activity.IntroActivity;
@@ -55,6 +56,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.prefs.Preferences;
@@ -73,6 +75,8 @@ public class CustomWebView {
     public Map<String, String> titleArr = new HashMap<>();
     private MainActivity.headerJsonCallback callback;
     private MainActivity.titleCallback callbackTitle;
+    private LoginActivity.headerJsonCallback callbackLogin;
+    private LoginActivity.titleCallback callbackTitleLogin;
     private final static int INTENT_CALL_PROFILE_GALLERY = 3002;
 
 
@@ -148,13 +152,16 @@ public class CustomWebView {
                 }
             }
 
-            String action = Utils.queryToMap(url).get("name");
+            final String action = Utils.queryToMap(url).get("name");
             final String uobjid = Utils.queryToMap(url).get("uobjid");
+            final String link = Utils.queryToMap(url).get("link");
             String content = Utils.queryToMap(url).get("content");
-            String bobjid = Utils.queryToMap(url).get("bobjid");
+            final String bobjid = Utils.queryToMap(url).get("bobjid");
+
             Logger.log(Logger.LogState.E, "action = " + action);
             Logger.log(Logger.LogState.E, "uobjid = " + uobjid);
             Logger.log(Logger.LogState.E, "bobjid = " + bobjid);
+            Logger.log(Logger.LogState.E, "link = " + link);
 
             if(action != null)
             {
@@ -180,7 +187,7 @@ public class CustomWebView {
                         return false;
                     }
                 }
-                else if(action.equals("go_main"))
+                else if(action.equals("go_main") ||  action.equals("update"))
                 {
                     if(uobjid != null)
                     {
@@ -197,9 +204,19 @@ public class CustomWebView {
                                 {
                                     SellerData.getInstance().setCurrentSellerVO(base, response.data.get(0));
 
-                                    Intent intent = new Intent(base, MainActivity.class);
-                                    base.startActivity(intent);
-                                    base.finish();
+                                    Logger.log(Logger.LogState.E, "savelog success" + Utils.getStringByObject(response.data.get(0)));
+
+                                    if(action.equals("go_main"))
+                                    {
+                                        Intent intent = new Intent(base, MainActivity.class);
+                                        base.startActivity(intent);
+                                        base.finish();
+                                    }
+                                    else if(action.equals("update"))
+                                    {
+                                        mView.loadUrl("javascript:goSetting();");
+                                    }
+
                                 }
                                 else
                                 {
@@ -231,7 +248,7 @@ public class CustomWebView {
                         Logger.log(Logger.LogState.E, "content = " + decodedString);
                         final String smsSendNum = Utils.queryToMap(url).get("phonenb");
                         SellerVO sellerVO = BasePreference.getInstance(base).getObject(BasePreference.SELLER_DATA, SellerVO.class);
-                        String sellerIdx = String.valueOf(sellerVO.getIdx());
+                        final String sellerIdx = String.valueOf(sellerVO.getIdx());
                         final String phonenb = sellerVO.getPhonenb();
                         final HashMap<String, String> params = new HashMap<>();
                         params.put("content", decodedString);
@@ -244,7 +261,10 @@ public class CustomWebView {
 
                                 String result = response.getResult();
                                 Logger.log(Logger.LogState.E, "result = " + Utils.getStringByObject(result));
-                                sendSms(smsSendNum, decodedString);
+                                if(link.equals("Y"))
+                                    getShortUrl(smsSendNum, sellerIdx, decodedString, bobjid);
+                                else
+                                    sendSms(smsSendNum, decodedString);
                             }
 
                             @Override
@@ -298,9 +318,59 @@ public class CustomWebView {
             if(titleArr.get(url) != null && !titleArr.get(url).equals(""))
             {
                 setWebViewTitle(titleArr.get(url));
+                setWebViewLoginTitle(titleArr.get(url));
             }
             super.onPageFinished(view, url);
         }
+    }
+
+    private void getShortUrl(final String phoneNumber, final String sellerIdx, final String sellerContent, final String bobjid)
+    {
+        HashMap<String, String> params = new HashMap<>();
+        params.put("longUrl", String.format(Constants.MENU_LINKS.ORDER_URL, phoneNumber, sellerIdx));
+        DataManager.getInstance(base).api.getShortUrl(base, params, new DataInterface.ResponseCallback<ShortData>() {
+            @Override
+            public void onSuccess(ShortData response) {
+                Logger.log(Logger.LogState.D, "savelog success");
+
+                String shortUrl = response.getId();
+                insertSellerMsg(sellerContent+ shortUrl, bobjid, sellerIdx, phoneNumber);
+
+            }
+
+            @Override
+            public void onError() {
+                Logger.log(Logger.LogState.E, "savelog fail");
+            }
+        });
+    }
+
+    private void insertSellerMsg(final String sellerContent, String bobjid, String sellerIdx, final String phoneNumber)
+    {
+        final HashMap<String, String> params = new HashMap<>();
+        params.put("content", sellerContent);
+        params.put("bobjid", bobjid);
+        params.put("sobjid", sellerIdx);
+        DataManager.getInstance(base).api.insertSellerMsg(base, params, new DataInterface.ResponseCallback<ResponseData>() {
+            @Override
+            public void onSuccess(ResponseData response) {
+                Logger.log(Logger.LogState.D, "insertSellerMsg success");
+
+                String result = response.getResult();
+                if(result.equals("1"))
+                {
+                    sendSms(phoneNumber, sellerContent);
+                }
+                else
+                    Logger.log(Logger.LogState.E, "insertSellerMsg fail");
+            }
+
+            @Override
+            public void onError() {
+                Logger.log(Logger.LogState.E, "insertSellerMsg fail");
+            }
+        });
+
     }
 
     private class MyCustomWebChromeClient extends WebChromeClient {
@@ -342,8 +412,23 @@ public class CustomWebView {
 			Log.e(Constants.LOG_TAG, "web title : " + title+ ", url : " + view.getUrl());
             if(!titleArr.containsKey(view.getUrl()))
             {
+                if(title.equals("title"))
+                {
+                    SellerVO sellerVO = BasePreference.getInstance(base).getObject(BasePreference.SELLER_DATA, SellerVO.class);
+                    title = sellerVO.getTitle();
+                }
                 titleArr.put(view.getUrl(), title);
             }
+            if(view.getUrl().indexOf("/srv/seller/regist") > -1)
+            {
+                setWebViewLoginHeaderJson(true);
+            }
+            else if(view.getUrl().indexOf("/srv/seller/menu") > -1)
+            {
+                setWebViewLoginHeaderJson(true);
+            }
+            else
+                setWebViewLoginHeaderJson(false);
             super.onReceivedTitle(view, title);
         }
 
@@ -423,6 +508,25 @@ public class CustomWebView {
         callbackTitle = listener;
     }
 
+    private void setWebViewLoginHeaderJson(boolean isShow) {
+        if(callbackLogin != null) callbackLogin.onReceive(isShow);
+
+    }
+
+    public void setWebHeaderLoginCallback(LoginActivity.headerJsonCallback listener)
+    {
+        callbackLogin = listener;
+    }
+
+    private void setWebViewLoginTitle(String title) {
+        if(callbackTitleLogin != null) callbackTitleLogin.onReceive(title);
+    }
+
+    public void setWebTitleLoginCallback(LoginActivity.titleCallback listener)
+    {
+        callbackTitleLogin = listener;
+    }
+
     public void initContentView(String link) {
         curUrl = link;
         mView.loadUrl(link);
@@ -438,14 +542,24 @@ public class CustomWebView {
 
     private void sendSms(String phoneNumber, String sellerContent)
     {
+        SmsManager mSmsManager = SmsManager.getDefault();
+        Logger.log(Logger.LogState.E, "sendSms");
         String smsText = sellerContent;
-        PendingIntent sentIntent = PendingIntent.getBroadcast(base, 0, new Intent("SMS_SENT_ACTION"), 0);
-        PendingIntent deliveredIntent = PendingIntent.getBroadcast(base, 0, new Intent("SMS_DELIVERED_ACTION"), 0);
+        ArrayList<String> smsTextList = mSmsManager.divideMessage(smsText);
+        int  numPart = smsTextList.size();
+        ArrayList<PendingIntent> sentIntent =  new ArrayList<>();
+        ArrayList<PendingIntent> deliveredIntent =  new ArrayList<>();
 
-        base.registerReceiver(new BroadcastReceiver() {
+        for(int i = 0; i < numPart; i++)
+        {
+            sentIntent.add(PendingIntent.getBroadcast(base, 0, new Intent("SMS_SENT_ACTION"), 0));
+            deliveredIntent.add(PendingIntent.getBroadcast(base, 0, new Intent("SMS_DELIVERED_ACTION"), 0));
+        }
+
+        final BroadcastReceiver br = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-
+                Logger.log(Logger.LogState.E, "BroadcastReceiver br");
                 //전화 끊기
                 try{
 
@@ -454,10 +568,12 @@ public class CustomWebView {
                     Method method = cls.getDeclaredMethod("getITelephony");
                     method.setAccessible(true);
                     ITelephony iTelephony = (ITelephony) method.invoke(telephonyManager);
-                    // iTelephony.endCall();
+                    iTelephony.endCall();
+                    Logger.log(Logger.LogState.E, "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
                 }catch (Exception e)
                 {
+                    Logger.log(Logger.LogState.E, "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
                     e.printStackTrace();
                 }
 
@@ -484,12 +600,14 @@ public class CustomWebView {
                         break;
                 }
             }
-        }, new IntentFilter("SMS_SENT_ACTION"));
+        };
 
-        base.registerReceiver(new BroadcastReceiver() {
+        base.registerReceiver(br, new IntentFilter("SMS_SENT_ACTION"));
+
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-
+                Logger.log(Logger.LogState.E, "BroadcastReceiver broadcastReceiver");
 
                 switch (getResultCode()){
                     case Activity.RESULT_OK:
@@ -502,12 +620,9 @@ public class CustomWebView {
                         break;
                 }
             }
-        }, new IntentFilter("SMS_DELIVERED_ACTION"));
-
-        SmsManager mSmsManager = SmsManager.getDefault();
-        mSmsManager.sendTextMessage(phoneNumber, null, smsText, sentIntent, deliveredIntent);
-
-
+        };
+        base.registerReceiver(broadcastReceiver, new IntentFilter("SMS_DELIVERED_ACTION"));
+        mSmsManager.sendMultipartTextMessage(phoneNumber, null, smsTextList, sentIntent, deliveredIntent);
 
     }
 }

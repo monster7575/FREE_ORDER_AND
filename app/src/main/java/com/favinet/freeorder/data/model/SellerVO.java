@@ -70,6 +70,10 @@ public class SellerVO extends ResponseData{
     @Expose
     private String gcmtoken;
 
+    @SerializedName("sec")
+    @Expose
+    private int sec;
+
     public Integer getIdx() {
         return idx;
     }
@@ -230,4 +234,11 @@ public class SellerVO extends ResponseData{
         this.gcmtoken = gcmtoken;
     }
 
+    public int getSec() {
+        return sec;
+    }
+
+    public void setSec(int sec) {
+        this.sec = sec;
+    }
 }

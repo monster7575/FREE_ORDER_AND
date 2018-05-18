@@ -220,6 +220,8 @@ public class BaseActivity extends AppCompatActivity implements UpdateListener {
         }
     }
 
+
+
     @Override
     public void addFragment(int menuId) {
 

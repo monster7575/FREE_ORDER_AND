@@ -20,16 +20,12 @@
             android:paddingLeft="10dp"
             android:paddingRight="10dp">
 
-            <com.beardedhen.androidbootstrap.BootstrapButton
+            <ImageButton
                 android:id="@+id/toolbar_refresh"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:bootstrapText="새로고침"
-                app:bootstrapBrand="info"
-                app:bootstrapSize="md"
-                app:buttonMode="regular"
-                app:showOutline="false"
-                app:roundedCorners="true"
+                android:src="@drawable/baseline_autorenew_white_36"
+                android:background="@android:color/transparent"
                 android:layout_centerVertical="true"
                 android:visibility="visible"
                 />
@@ -38,7 +34,7 @@
                 android:id="@+id/toolbar_back"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/top_arrow_left"
+                android:src="@drawable/baseline_arrow_back_white_36"
                 android:background="@android:color/transparent"
                 android:layout_centerVertical="true"
                 android:visibility="gone"/>
@@ -55,16 +51,12 @@
                 android:textColor="@color/colorBackground"
                 android:textAllCaps="true"/>
 
-            <com.beardedhen.androidbootstrap.BootstrapButton
+            <ImageButton
                 android:id="@+id/toolbar_setting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:bootstrapText="설정"
-                app:bootstrapBrand="info"
-                app:bootstrapSize="md"
-                app:buttonMode="regular"
-                app:showOutline="false"
-                app:roundedCorners="true"
+                android:src="@drawable/baseline_settings_white_36"
+                android:background="@android:color/transparent"
                 android:layout_centerVertical="true"
                 android:layout_alignParentRight="true"
                 android:visibility="visible"

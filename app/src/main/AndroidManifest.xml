@@ -60,7 +60,7 @@
         </activity>
 
         <activity android:name=".ui.activity.LoginActivity"
-            android:theme="@style/FullScrennTheme">
+            android:theme="@style/ToolbarTheme">
         </activity>
 
         <activity android:name=".ui.activity.MainActivity"

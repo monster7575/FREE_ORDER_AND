@@ -45,6 +45,7 @@ public class IncomingCallBroadcastReceiver extends BroadcastReceiver{
     public void onReceive(final Context context, final Intent intent) {
 
         final SellerVO sellerVO = BasePreference.getInstance(context).getObject(BasePreference.SELLER_DATA, SellerVO.class);
+        Log.e("sellerVO  : ", Utils.getStringByObject(sellerVO));
         if(sellerVO != null)
         {
             String useyn = sellerVO.getUseyn();
@@ -68,11 +69,11 @@ public class IncomingCallBroadcastReceiver extends BroadcastReceiver{
                     public void run() {
                         Log.e("EXTRA_STATE_RINGING  222: ", "" + state);
                         Log.e("EXTRA_STATE_RINGING  222: ", "" + mLastState);
-                        if(TelephonyManager.EXTRA_STATE_RINGING.equals(mLastState))
+                        String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
+                        if(TelephonyManager.EXTRA_STATE_RINGING.equals(mLastState) && Utils.isValidCellPhoneNumber(incomingNumber))
                         {
                             final String idx = String.valueOf(sellerVO.getIdx());
                             final String content = sellerVO.getContent();
-                            String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
                             final String phoneNumber = PhoneNumberUtils.formatNumber(incomingNumber);
                             Log.e("phoneNumber : ", phoneNumber);
 
