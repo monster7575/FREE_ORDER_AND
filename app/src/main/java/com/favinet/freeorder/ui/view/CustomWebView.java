@@ -435,6 +435,10 @@ public class CustomWebView {
             {
                 setWebViewLoginHeaderJson(true);
             }
+            else if(view.getUrl().indexOf("/srv/goods/mobile/insert") > -1)
+            {
+                setWebViewLoginHeaderJson(true);
+            }
             else
                 setWebViewLoginHeaderJson(false);
             super.onReceivedTitle(view, title);
