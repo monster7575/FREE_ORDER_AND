@@ -91,12 +91,13 @@ public class CallingService extends Service{
         return START_NOT_STICKY   ;
     }
 
-    private void insertSellerMsg(final String sellerContent, String bobjid, String sellerIdx, final String phoneNumber)
+    private void insertSellerMsg(final String sellerContent, String bobjid, String sellerIdx, final String phoneNumber, final String url)
     {
         final HashMap<String, String> params = new HashMap<>();
         params.put("content", sellerContent);
         params.put("bobjid", bobjid);
         params.put("sobjid", sellerIdx);
+        params.put("url", url);
         DataManager.getInstance(this).api.insertSellerMsg(this, params, new DataInterface.ResponseCallback<ResponseData>() {
             @Override
             public void onSuccess(ResponseData response) {
@@ -121,15 +122,17 @@ public class CallingService extends Service{
 
     private void getShortUrl(final String phoneNumber, final String sellerIdx, final String sellerContent, final String bobjid)
     {
+        Long tsLong = System.currentTimeMillis()/1000;
+        String ts = tsLong.toString();
         HashMap<String, String> params = new HashMap<>();
-        params.put("longUrl", String.format(Constants.MENU_LINKS.ORDER_URL, phoneNumber, sellerIdx));
+        params.put("longUrl", String.format(Constants.MENU_LINKS.ORDER_URL, phoneNumber, sellerIdx, ts));
         DataManager.getInstance(this).api.getShortUrl(this, params, new DataInterface.ResponseCallback<ShortData>() {
             @Override
             public void onSuccess(ShortData response) {
                 Logger.log(Logger.LogState.D, "savelog success");
 
                 String shortUrl = response.getId();
-                insertSellerMsg(sellerContent+ shortUrl, bobjid, sellerIdx, phoneNumber);
+                insertSellerMsg(sellerContent+ "\n\n" + shortUrl, bobjid, sellerIdx, phoneNumber, shortUrl);
 
             }
 

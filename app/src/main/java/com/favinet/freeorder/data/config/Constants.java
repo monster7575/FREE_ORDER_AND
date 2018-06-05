@@ -30,7 +30,8 @@ public class Constants {
         public static final String BUYERLIST_URL = "http://" + Constants.DOING_DOMAIN + "/srv/buyer/mobile/list";
         public static final String SELLER_LOGIN = "http://" + Constants.DOING_DOMAIN + "/srv/seller/mobile/login";
         public static final String SELLER_SETTING = "http://" + Constants.DOING_DOMAIN + "/srv/seller/mobile/main/setting";
-        public static final String ORDER_URL = "http://" + Constants.DOING_DOMAIN + "/srv/buyer/mobile/insert/%s/%s";
+        public static final String ORDER_URL = "http://" + Constants.DOING_DOMAIN + "/srv/buyer/mobile/insert/%s/%s/%s";
+        public static final String STATE_URL = "http://" + Constants.DOING_DOMAIN + "/srv/buyer/mobile/state/%s";
     }
 
     public final class VIEW_ANIMATION {

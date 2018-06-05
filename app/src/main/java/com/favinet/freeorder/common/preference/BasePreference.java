@@ -15,7 +15,7 @@ import java.lang.reflect.Type;
 public class BasePreference {
 
     private static BasePreference instance;
-    private final String PREF_NAME = "com.example.sampleandroid";
+    private final String PREF_NAME = "com.favinet.freeorder";
     public static final String GCM_TOKEN = "GCM_TOKEN";
     public static final String SELLER_DATA = "SELLER_DATA";
 
