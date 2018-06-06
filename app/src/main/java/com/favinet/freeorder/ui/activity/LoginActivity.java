@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageButton;
@@ -63,7 +64,7 @@ public class LoginActivity extends AppActivity {
     private LoginActivity.headerJsonCallback mHeaderJsonCallback = new LoginActivity.headerJsonCallback() {
         @Override
         public void onReceive(boolean isShow) {
-
+            Log.e(Constants.LOG_TAG, "mHeaderJsonCallback : " + isShow);
             initToobar(isShow);
         }
     };
@@ -188,6 +189,8 @@ public class LoginActivity extends AppActivity {
         }
         else
             toolbar_header.setVisibility(View.GONE);
+
+        stopIndicator();
     }
 
     private void start() {
@@ -215,18 +218,5 @@ public class LoginActivity extends AppActivity {
                     break;
             }
         }
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode == KeyEvent.KEYCODE_BACK)
-        {
-            if(customWebView.mView.canGoBack())
-            {
-                customWebView.mView.goBack();
-                return true;
-            }
-        }
-        return super.onKeyDown(keyCode, event);
     }
 }

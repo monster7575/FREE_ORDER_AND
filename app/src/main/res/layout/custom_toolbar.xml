@@ -62,6 +62,17 @@
                 android:visibility="visible"
                 />
 
+
+            <ImageButton
+                android:id="@+id/toolbar_add"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/baseline_add_white_36"
+                android:background="@android:color/transparent"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:visibility="gone"
+                />
         </RelativeLayout>
 
     </RelativeLayout>

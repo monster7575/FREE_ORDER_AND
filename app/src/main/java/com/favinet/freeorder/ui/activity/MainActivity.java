@@ -45,6 +45,7 @@ public class MainActivity extends AppActivity
     @BindView(R.id.toolbar_title) TextView toolbar_title;
     @BindView(R.id.toolbar_back) ImageButton toolbar_back;
     @BindView(R.id.toolbar_refresh) ImageButton toolbar_refresh;
+    @BindView(R.id.toolbar_add) ImageButton toolbar_add;
 
 
     public CustomWebView customWebView;
@@ -167,6 +168,7 @@ public class MainActivity extends AppActivity
         toolbar_setting.setOnClickListener(mListener);
         toolbar_back.setOnClickListener(mListener);
         toolbar_refresh.setOnClickListener(mListener);
+        toolbar_add.setOnClickListener(mListener);
     }
 
     private void start() {
@@ -196,18 +198,33 @@ public class MainActivity extends AppActivity
             String backBt = (jsonObject.has("backBt")) ? jsonObject.getString("backBt") : "N";
             String refreshBt = (jsonObject.has("refreshBt")) ? jsonObject.getString("refreshBt") : "N";
             String settingBt = (jsonObject.has("settingBt")) ? jsonObject.getString("settingBt") : "N";
+            String addBt = (jsonObject.has("addBt")) ? jsonObject.getString("addBt") : "N";
+
+            toolbar_header.findViewById(R.id.toolbar_back).setVisibility(View.GONE);
+            toolbar_header.findViewById(R.id.toolbar_refresh).setVisibility(View.GONE);
+            toolbar_header.findViewById(R.id.toolbar_setting).setVisibility(View.GONE);
+            toolbar_header.findViewById(R.id.toolbar_add).setVisibility(View.GONE);
+
             if(backBt.equals("Y"))
-            {
                 toolbar_header.findViewById(R.id.toolbar_back).setVisibility(View.VISIBLE);
-                toolbar_header.findViewById(R.id.toolbar_refresh).setVisibility(View.GONE);
-                toolbar_header.findViewById(R.id.toolbar_setting).setVisibility(View.GONE);
-            }
-            if(refreshBt.equals("Y") && settingBt.equals("Y"))
-            {
+            else
                 toolbar_header.findViewById(R.id.toolbar_back).setVisibility(View.GONE);
+
+            if(refreshBt.equals("Y"))
                 toolbar_header.findViewById(R.id.toolbar_refresh).setVisibility(View.VISIBLE);
+            else
+                toolbar_header.findViewById(R.id.toolbar_refresh).setVisibility(View.GONE);
+
+            if(settingBt.equals("Y"))
                 toolbar_header.findViewById(R.id.toolbar_setting).setVisibility(View.VISIBLE);
-            }
+            else
+                toolbar_header.findViewById(R.id.toolbar_setting).setVisibility(View.GONE);
+
+            if(addBt.equals("Y"))
+                toolbar_header.findViewById(R.id.toolbar_add).setVisibility(View.VISIBLE);
+            else
+                toolbar_header.findViewById(R.id.toolbar_add).setVisibility(View.GONE);
+
         }
         catch (JSONException e)
         {
@@ -235,6 +252,26 @@ public class MainActivity extends AppActivity
                     {
                         customWebView.mView.loadUrl("javascript:location.replace('http://order.favinet.co.kr/srv/buyer/mobile/list');");
                     }
+                    else if(customWebView.mView.getUrl().indexOf("/srv/seller/mobile/update") > -1)
+                    {
+                        customWebView.mView.loadUrl("javascript:location.replace('http://order.favinet.co.kr/srv/seller/mobile/main/setting');");
+                    }
+                    else if(customWebView.mView.getUrl().indexOf("/srv/goods/mobile/list") > -1)
+                    {
+                        customWebView.mView.loadUrl("javascript:location.replace('http://order.favinet.co.kr/srv/seller/mobile/main/setting');");
+                    }
+                    else if(customWebView.mView.getUrl().indexOf("/srv/sellmsglog/mobile/list") > -1)
+                    {
+                        customWebView.mView.loadUrl("javascript:location.replace('http://order.favinet.co.kr/srv/seller/mobile/main/setting');");
+                    }
+                    else if(customWebView.mView.getUrl().indexOf("/srv/seller/mobile/update/pwd") > -1)
+                    {
+                        customWebView.mView.loadUrl("javascript:location.replace('http://order.favinet.co.kr/srv/seller/mobile/main/setting');");
+                    }
+                    else if(customWebView.mView.getUrl().indexOf("/srv/goods/mobile/select/") > -1)
+                    {
+                        customWebView.mView.loadUrl("javascript:location.replace('http://order.favinet.co.kr/srv/goods/mobile/list');");
+                    }
                     else
                     {
                         if(customWebView.mView.canGoBack())
@@ -244,20 +281,10 @@ public class MainActivity extends AppActivity
                 case R.id.toolbar_refresh :
                     customWebView.mView.reload();
                     break;
+                case R.id.toolbar_add :
+                    customWebView.mView.loadUrl("http://order.favinet.co.kr/srv/goods/mobile/insert");
+                    break;
             }
         }
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode == KeyEvent.KEYCODE_BACK)
-        {
-            if(customWebView.mView.canGoBack())
-            {
-                customWebView.mView.goBack();
-                return true;
-            }
-        }
-        return super.onKeyDown(keyCode, event);
     }
 }

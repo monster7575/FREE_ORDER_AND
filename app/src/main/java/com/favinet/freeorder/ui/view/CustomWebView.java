@@ -158,16 +158,17 @@ public class CustomWebView {
             String content = Utils.queryToMap(url).get("content");
             final String bobjid = Utils.queryToMap(url).get("bobjid");
             final String phonenb = Utils.queryToMap(url).get("phonenb");
+            final String idx = (Utils.queryToMap(url).get("idx") == null) ? "" : Utils.queryToMap(url).get("idx");
 
             Logger.log(Logger.LogState.E, "action = " + action);
             Logger.log(Logger.LogState.E, "uobjid = " + uobjid);
             Logger.log(Logger.LogState.E, "bobjid = " + bobjid);
             Logger.log(Logger.LogState.E, "link = " + link);
             Logger.log(Logger.LogState.E, "phonenb = " + phonenb);
+            Logger.log(Logger.LogState.E, "idx = " + idx);
 
             if(action != null)
             {
-
                 if(action.equals("get_seller"))
                 {
                     String token = BasePreference.getInstance(base).getValue(BasePreference.GCM_TOKEN, "");
@@ -176,6 +177,7 @@ public class CustomWebView {
                 }
                 else if(action.equals("setTopMenu"))
                 {
+                    Logger.log(Logger.LogState.E, "setTopMenu url = " + url);
                     String json = Utils.queryToMap(url).get("params");
                     try
                     {
@@ -188,6 +190,12 @@ public class CustomWebView {
                         e.printStackTrace();
                         return false;
                     }
+                }
+                else if(action.equals("showHeader"))
+                {
+                    Logger.log(Logger.LogState.E, "showHeader url = " + url);
+                    setWebViewLoginHeaderJson(true);
+                    return true;
                 }
                 else if(action.equals("go_main") ||  action.equals("update"))
                 {
@@ -246,40 +254,19 @@ public class CustomWebView {
                 else if(action.equals("sendsms"))
                 {
                     try
-                    {final String decodedString = URLDecoder.decode(content, "UTF-8");
-                        Logger.log(Logger.LogState.E, "content = " + decodedString);
+                    {
+                        final String decodedString = URLDecoder.decode(content, "UTF-8");
                         final String smsSendNum = Utils.queryToMap(url).get("phonenb");
                         SellerVO sellerVO = BasePreference.getInstance(base).getObject(BasePreference.SELLER_DATA, SellerVO.class);
                         final String sellerIdx = String.valueOf(sellerVO.getIdx());
-                        final HashMap<String, String> params = new HashMap<>();
-                        params.put("content", decodedString);
-                        params.put("bobjid", bobjid);
-                        params.put("sobjid", sellerIdx);
-                        DataManager.getInstance(base).api.insertSellerMsg(base, params, new DataInterface.ResponseCallback<ResponseData>() {
-                            @Override
-                            public void onSuccess(ResponseData response) {
-                                Logger.log(Logger.LogState.D, "insertSellerMsg success");
 
-                                String result = response.getResult();
-                                Logger.log(Logger.LogState.E, "result = " + Utils.getStringByObject(result));
-                                if(link.equals("Y"))
-                                    getShortUrl(smsSendNum, sellerIdx, decodedString, bobjid);
-                                else
-                                    sendSms(smsSendNum, decodedString);
-                            }
+                        getShortUrl(smsSendNum, sellerIdx, decodedString, bobjid, link, idx);
 
-                            @Override
-                            public void onError() {
-                                Logger.log(Logger.LogState.E, "insertSellerMsg fail");
-                            }
-                        });
-
-
-                    } catch (UnsupportedEncodingException e) {
+                    }
+                    catch (Exception e)
+                    {
                         e.printStackTrace();
                     }
-
-
                     return true;
                 }
                 else if(action.equals("start_loading"))
@@ -325,6 +312,7 @@ public class CustomWebView {
             CookieSyncManager.getInstance().sync();
             if(titleArr.get(url) != null && !titleArr.get(url).equals(""))
             {
+                Logger.log(Logger.LogState.E, "onPageFinished : " + url);
                 setWebViewTitle(titleArr.get(url));
                 setWebViewLoginTitle(titleArr.get(url));
             }
@@ -332,17 +320,27 @@ public class CustomWebView {
         }
     }
 
-    private void getShortUrl(final String phoneNumber, final String sellerIdx, final String sellerContent, final String bobjid)
+    private void getShortUrl(final String phoneNumber, final String sellerIdx, final String sellerContent, final String bobjid, final String link, final String idx)
     {
+        Long tsLong = System.currentTimeMillis()/1000;
+        String ts = tsLong.toString();
         HashMap<String, String> params = new HashMap<>();
-        params.put("longUrl", String.format(Constants.MENU_LINKS.ORDER_URL, phoneNumber, sellerIdx));
+        if(idx.equals(""))
+            params.put("longUrl", String.format(Constants.MENU_LINKS.ORDER_URL, phoneNumber, sellerIdx, ts));
+        else
+            params.put("longUrl", String.format(Constants.MENU_LINKS.STATE_URL, idx));
+
+
         DataManager.getInstance(base).api.getShortUrl(base, params, new DataInterface.ResponseCallback<ShortData>() {
             @Override
             public void onSuccess(ShortData response) {
-                Logger.log(Logger.LogState.D, "savelog success");
 
                 String shortUrl = response.getId();
-                insertSellerMsg(sellerContent+ shortUrl, bobjid, sellerIdx, phoneNumber);
+                if(link.equals("N"))
+                {
+                    shortUrl = "";
+                }
+                insertSellerMsg(sellerContent+ "\n\n" + shortUrl, bobjid, sellerIdx, phoneNumber, shortUrl);
 
             }
 
@@ -353,12 +351,13 @@ public class CustomWebView {
         });
     }
 
-    private void insertSellerMsg(final String sellerContent, String bobjid, String sellerIdx, final String phoneNumber)
+    private void insertSellerMsg(final String sellerContent, String bobjid, String sellerIdx, final String phoneNumber, final String url)
     {
         final HashMap<String, String> params = new HashMap<>();
         params.put("content", sellerContent);
         params.put("bobjid", bobjid);
         params.put("sobjid", sellerIdx);
+        params.put("url", url);
         DataManager.getInstance(base).api.insertSellerMsg(base, params, new DataInterface.ResponseCallback<ResponseData>() {
             @Override
             public void onSuccess(ResponseData response) {
@@ -424,18 +423,35 @@ public class CustomWebView {
                 {
                     SellerVO sellerVO = BasePreference.getInstance(base).getObject(BasePreference.SELLER_DATA, SellerVO.class);
                     title = sellerVO.getTitle();
+                    Logger.log(Logger.LogState.E, "타이틀 : " + title);
+                    titleArr.put(view.getUrl(), title);
                 }
-                titleArr.put(view.getUrl(), title);
+                else
+                {
+                    titleArr.remove("http://order.favinet.co.kr/srv/buyer/mobile/list");
+                    titleArr.put(view.getUrl(), title);
+                }
+
             }
-            if(view.getUrl().indexOf("/srv/seller/regist") > -1)
+            else
             {
-                setWebViewLoginHeaderJson(true);
+                if(title.equals("title"))
+                {
+                    SellerVO sellerVO = BasePreference.getInstance(base).getObject(BasePreference.SELLER_DATA, SellerVO.class);
+                    title = sellerVO.getTitle();
+                    Logger.log(Logger.LogState.E, "타이틀 : " + title);
+                    titleArr.put(view.getUrl(), title);
+                }
             }
-            else if(view.getUrl().indexOf("/srv/seller/menu") > -1)
+            if(view.getUrl().indexOf("/srv/seller/mobile/menu") > -1)
             {
                 setWebViewLoginHeaderJson(true);
             }
             else if(view.getUrl().indexOf("/srv/goods/mobile/insert") > -1)
+            {
+                setWebViewLoginHeaderJson(true);
+            }
+            else if(view.getUrl().indexOf("/srv/seller/mobile/insert") > -1)
             {
                 setWebViewLoginHeaderJson(true);
             }
