@@ -69,10 +69,15 @@ public class SellerVO extends ResponseData{
     @SerializedName("gcmtoken")
     @Expose
     private String gcmtoken;
-
     @SerializedName("sec")
     @Expose
     private int sec;
+    @SerializedName("strtimes")
+    @Expose
+    private String strtimes;
+    @SerializedName("strdaies")
+    @Expose
+    private String strdaies;
 
     public Integer getIdx() {
         return idx;
@@ -240,5 +245,21 @@ public class SellerVO extends ResponseData{
 
     public void setSec(int sec) {
         this.sec = sec;
+    }
+
+    public String getStrtimes() {
+        return strtimes;
+    }
+
+    public void setStrtimes(String strtimes) {
+        this.strtimes = strtimes;
+    }
+
+    public String getStrdaies() {
+        return strdaies;
+    }
+
+    public void setStrdaies(String strdaies) {
+        this.strdaies = strdaies;
     }
 }

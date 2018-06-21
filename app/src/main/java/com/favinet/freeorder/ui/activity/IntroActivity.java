@@ -92,20 +92,13 @@ public class IntroActivity extends AppActivity{
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Logger.log(Logger.LogState.E, "requestCode = " + requestCode);
-        if(requestCode == 0)
-        {
-            AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-            audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-            checkPermission();
-        }
+
         super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        Logger.log(Logger.LogState.E, "onRequestPermissionsResult = " + requestCode);
-        checkPermission();
+
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
@@ -119,85 +112,8 @@ public class IntroActivity extends AppActivity{
         Logger.log(Logger.LogState.E, "start = " + Utils.getStringByObject(token));
         BasePreference.getInstance(getApplicationContext()).put(BasePreference.GCM_TOKEN, token);
 
-        checkPermission();
+        handler.postDelayed(runMain, 1500);
 
     }
 
-    private void checkPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-            PermissionHelper.getInstance().setPermissionAndActivity(new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.SEND_SMS, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CALL_PHONE}, (Activity) context);
-
-            if(!PermissionHelper.getInstance().checkPermission()) {
-                PermissionHelper.getInstance().requestPermission(0, new PermissionHelper.PermissionCallback() {
-                    @Override
-                    public void onPermissionResult(String[] permissions, int[] grantResults) {
-                        int size = permissions.length;
-                        Logger.log(Logger.LogState.E, "permissions = " + Utils.getStringByObject(permissions));
-                        if(size > 0 && permissions[0].equals(Manifest.permission.READ_PHONE_STATE))
-                        {
-                            Logger.log(Logger.LogState.E, "READ_PHONE_STATE = " + permissions[0].equals(Manifest.permission.READ_PHONE_STATE));
-                            if(grantResults[0] != PackageManager.PERMISSION_GRANTED)
-                            {
-                                System.exit(0);
-                                return;
-                            }
-                            else
-                            {
-                                handler.postDelayed(runMain, 1500);
-                            }
-                        }
-                        if(size > 0 && permissions[1].equals(Manifest.permission.SEND_SMS))
-                        {
-                            if(grantResults[1] != PackageManager.PERMISSION_GRANTED)
-                            {
-                                System.exit(0);
-                                return;
-                            }
-                            else
-                            {
-                                handler.postDelayed(runMain, 1500);
-                            }
-                        }
-                        if(size > 0 && permissions[2].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE))
-                        {
-                            if(grantResults[2] != PackageManager.PERMISSION_GRANTED)
-                            {
-                                System.exit(0);
-                                return;
-                            }
-                            else
-                            {
-                                handler.postDelayed(runMain, 1500);
-                            }
-                        }
-                        if(size > 0 && permissions[3].equals(Manifest.permission.CALL_PHONE))
-                        {
-                            if(grantResults[3] != PackageManager.PERMISSION_GRANTED)
-                            {
-                                System.exit(0);
-                                return;
-                            }
-                            else
-                            {
-                                handler.postDelayed(runMain, 1500);
-                            }
-                        }
-                        else
-                        {
-                            handler.postDelayed(runMain, 1500);
-                        }
-                    }
-                });
-            }
-            else
-            {
-                handler.postDelayed(runMain, 1500);
-            }
-        }
-        else
-        {
-            handler.postDelayed(runMain, 1500);
-        }
-    }
 }

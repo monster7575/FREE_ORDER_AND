@@ -1,13 +1,17 @@
 package com.favinet.freeorder.ui.activity;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
@@ -20,6 +24,7 @@ import android.widget.TextView;
 import com.favinet.freeorder.R;
 import com.favinet.freeorder.common.preference.BasePreference;
 import com.favinet.freeorder.common.tool.Logger;
+import com.favinet.freeorder.common.tool.PermissionHelper;
 import com.favinet.freeorder.common.tool.Utils;
 import com.favinet.freeorder.data.config.Constants;
 import com.favinet.freeorder.data.model.UploadCon;
@@ -116,7 +121,21 @@ public class LoginActivity extends AppActivity {
                 return;
             }
         }
+        Logger.log(Logger.LogState.E, "requestCode = " + requestCode);
+        if(requestCode == 0)
+        {
+            AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+            audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+            checkPermission();
+        }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Logger.log(Logger.LogState.E, "onRequestPermissionsResult = " + requestCode);
+        checkPermission();
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -124,6 +143,8 @@ public class LoginActivity extends AppActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        checkPermission();
 
         NotificationManager n = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         if(n.isNotificationPolicyAccessGranted()) {
@@ -199,6 +220,63 @@ public class LoginActivity extends AppActivity {
         String token = FirebaseInstanceId.getInstance().getToken();
         Logger.log(Logger.LogState.E, "start = " + Utils.getStringByObject(token));
         BasePreference.getInstance(getApplicationContext()).put(BasePreference.GCM_TOKEN, token);
+
+    }
+
+    private void checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            PermissionHelper.getInstance().setPermissionAndActivity(new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.SEND_SMS, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CALL_PHONE}, (Activity) context);
+
+            if(!PermissionHelper.getInstance().checkPermission()) {
+                PermissionHelper.getInstance().requestPermission(0, new PermissionHelper.PermissionCallback() {
+                    @Override
+                    public void onPermissionResult(String[] permissions, int[] grantResults) {
+                        int size = permissions.length;
+                        Logger.log(Logger.LogState.E, "permissions = " + Utils.getStringByObject(permissions));
+                        if(size > 0 && permissions[0].equals(Manifest.permission.READ_PHONE_STATE))
+                        {
+                            Logger.log(Logger.LogState.E, "READ_PHONE_STATE = " + permissions[0].equals(Manifest.permission.READ_PHONE_STATE));
+                            if(grantResults[0] != PackageManager.PERMISSION_GRANTED)
+                            {
+                                System.exit(0);
+                                return;
+                            }
+
+                        }
+                        if(size > 0 && permissions[1].equals(Manifest.permission.SEND_SMS))
+                        {
+                            if(grantResults[1] != PackageManager.PERMISSION_GRANTED)
+                            {
+                                System.exit(0);
+                                return;
+                            }
+
+                        }
+                        if(size > 0 && permissions[2].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                        {
+                            if(grantResults[2] != PackageManager.PERMISSION_GRANTED)
+                            {
+                                System.exit(0);
+                                return;
+                            }
+
+                        }
+                        if(size > 0 && permissions[3].equals(Manifest.permission.CALL_PHONE))
+                        {
+                            if(grantResults[3] != PackageManager.PERMISSION_GRANTED)
+                            {
+                                System.exit(0);
+                                return;
+                            }
+
+                        }
+
+                    }
+                });
+            }
+
+        }
 
     }
 

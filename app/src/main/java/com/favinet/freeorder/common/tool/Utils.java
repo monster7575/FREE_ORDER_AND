@@ -26,6 +26,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -324,6 +325,15 @@ public class Utils {
 
     }
 
+    /**
+     * dayOfWeek
+     */
+    public static int  getDayOfWeek()
+    {
+        Calendar calendar = Calendar.getInstance();
+        int week = calendar.get(Calendar.DAY_OF_WEEK);
+        return week-1;
+    }
 }
 
 

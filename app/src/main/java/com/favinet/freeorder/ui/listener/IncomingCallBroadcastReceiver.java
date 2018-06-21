@@ -27,6 +27,8 @@ import com.favinet.freeorder.data.tool.DataInterface;
 import com.favinet.freeorder.data.tool.DataManager;
 import com.favinet.freeorder.ui.activity.MainActivity;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 
 
@@ -61,7 +63,36 @@ public class IncomingCallBroadcastReceiver extends BroadcastReceiver{
             }
             Log.e("EXTRA_STATE_RINGING  : ", "" + TelephonyManager.EXTRA_STATE_RINGING);
             Log.e("EXTRA_STATE_RINGING  : ", "" + useyn);
-            if(TelephonyManager.EXTRA_STATE_RINGING.equals(state) && useyn.equals("Y"))
+
+            int saveStartTimes = Integer.valueOf(sellerVO.getStrtimes().substring(0, 4));
+            Log.e("saveStartTimes  : ", "" + saveStartTimes);
+            int saveEndTimes = Integer.valueOf(sellerVO.getStrtimes().substring(4, 8));
+            Log.e("saveEndTimes  : ", "" + saveEndTimes);
+            String saveStrdaies = sellerVO.getStrdaies();
+            Log.e("saveStrdaies  : ", "" + saveStrdaies);
+            int nowWeek = Utils.getDayOfWeek();
+            Log.e("nowWeek  : ", "" + nowWeek);
+            boolean isOpenDay = false;
+            boolean isOpenTime = false;
+            String compareWeek = saveStrdaies.substring(nowWeek, nowWeek+1);
+            Log.e("compareWeek  : ", "" + compareWeek);
+            if(compareWeek.equals("Y"))
+            {
+                isOpenDay = true;
+            }
+
+            long nowTimeL = System.currentTimeMillis();
+            Date date = new Date(nowTimeL);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HHmm");
+            int nowTime = Integer.valueOf(simpleDateFormat.format(date));
+            Log.e("nowTime  : ", "" + nowTime);
+            if(nowTime >= saveStartTimes && nowTime <= saveEndTimes)
+            {
+                isOpenTime = true;
+            }
+            Log.e("isOpenDay  : ", "" + isOpenDay);
+            Log.e("isOpenTime  : ", "" + isOpenTime);
+            if(TelephonyManager.EXTRA_STATE_RINGING.equals(state) && useyn.equals("Y") && isOpenDay && isOpenTime)
             {
                 new Handler().postDelayed(new Runnable() {
                     @SuppressLint("LongLogTag")
