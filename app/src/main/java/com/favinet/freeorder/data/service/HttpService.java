@@ -44,4 +44,12 @@ public interface HttpService {
     @POST(Constants.API_URL.API_UPFILE)
     Call<UploadCon> uploadFile(@Part List<MultipartBody.Part> params);
 
+    @FormUrlEncoded
+    @POST(Constants.API_URL.API_SMS_LIST)
+    Call<BuyerReponse> callSmsReceiverBuyer(@FieldMap Map<String, String> params);
+
+    @FormUrlEncoded
+    @POST(Constants.API_URL.API_GUIDE)
+    Call<BuyerReponse> callGuide(@FieldMap Map<String, String> params);
+
 }

@@ -24,6 +24,7 @@ import com.favinet.freeorder.data.config.Constants;
 import com.favinet.freeorder.data.model.ResponseData;
 import com.favinet.freeorder.data.model.SellerData;
 import com.favinet.freeorder.data.model.SellerReponse;
+import com.favinet.freeorder.data.model.SellerVO;
 import com.favinet.freeorder.data.model.ShortData;
 import com.favinet.freeorder.data.tool.DataInterface;
 import com.favinet.freeorder.data.tool.DataManager;
@@ -146,8 +147,11 @@ public class CallingService extends Service{
     private void sendSms(String phoneNumber, String sellerContent)
     {
         SmsManager mSmsManager = SmsManager.getDefault();
+
+        SellerVO sellerVO = SellerData.getInstance().getCurrentSellerVO(getApplicationContext());
+
         Logger.log(Logger.LogState.E, "sendSms");
-        String smsText = sellerContent;
+        String smsText =  "<" + sellerVO.getTitle() + ">\r\n" +  sellerContent + "\r\n* 주문 감사드립니다.";
         ArrayList<String> smsTextList = mSmsManager.divideMessage(smsText);
         int  numPart = smsTextList.size();
         ArrayList<PendingIntent> sentIntent =  new ArrayList<>();
@@ -172,11 +176,9 @@ public class CallingService extends Service{
                     method.setAccessible(true);
                     ITelephony iTelephony = (ITelephony) method.invoke(telephonyManager);
                     iTelephony.endCall();
-                    Logger.log(Logger.LogState.E, "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 
                 }catch (Exception e)
                 {
-                    Logger.log(Logger.LogState.E, "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
                     e.printStackTrace();
                 }
 
@@ -211,7 +213,6 @@ public class CallingService extends Service{
         BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Logger.log(Logger.LogState.E, "BroadcastReceiver broadcastReceiver");
 
                 switch (getResultCode()){
                     case Activity.RESULT_OK:
@@ -227,8 +228,6 @@ public class CallingService extends Service{
         };
         registerReceiver(broadcastReceiver, new IntentFilter("SMS_DELIVERED_ACTION"));
         mSmsManager.sendMultipartTextMessage(phoneNumber, null, smsTextList, sentIntent, deliveredIntent);
-
-
 
     }
 }

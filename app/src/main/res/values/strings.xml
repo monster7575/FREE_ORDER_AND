@@ -6,4 +6,5 @@
     <string name="app_end">뒤로 버튼을 한번 더 누르면 앱이 종료됩니다.</string>
     <string name="network_error">네트워크 상태를 확인해주세요</string>
     <string name="gallery_error">이미지 정보를 가져오는데 실패하였습니다.</string>
+    <string name="sending_sms">메시지를 전송중입니다.</string>
 </resources>

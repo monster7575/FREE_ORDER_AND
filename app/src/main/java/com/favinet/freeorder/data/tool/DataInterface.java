@@ -234,4 +234,74 @@ public class DataInterface extends BaseDataInterface {
             callback.onError();
         }
     }
+
+    public void getSmsReceiverBuyer(Context context, Map<String, String> params, final ResponseCallback callback)
+    {
+
+        try {
+            Logger.log(Logger.LogState.E, "params = " + Utils.getStringByObject(params));
+            Call<BuyerReponse> call = service.callSmsReceiverBuyer(params);
+            call.enqueue(new RetryableCallback<BuyerReponse>(call, context) {
+                @Override
+                public void onFinalResponse(Call<BuyerReponse> call, retrofit2.Response<BuyerReponse> response) {
+                    Logger.log(Logger.LogState.E, "getSmsReceiverBuyer onFinalResponse = " + Utils.getStringByObject(response));
+                    if (callback == null) return;
+                    if (response.isSuccessful()) {
+                        callback.onSuccess(response.body());
+                    } else {
+                        callback.onError();
+                    }
+                }
+
+                @Override
+                public void onFinalFailure(Call<BuyerReponse> call, Throwable t) {
+                    Logger.log(Logger.LogState.E, "onFinalFailure = " + Utils.getStringByObject(t));
+                    if (callback == null)
+                        return;
+                    t.printStackTrace();
+                    callback.onError();
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            callback.onError();
+        }
+    }
+
+    public void getGuide(Context context, Map<String, String> params, final ResponseCallback callback)
+    {
+
+        try {
+            Logger.log(Logger.LogState.E, "params = " + Utils.getStringByObject(params));
+            Call<BuyerReponse> call = service.callGuide(params);
+            call.enqueue(new RetryableCallback<BuyerReponse>(call, context) {
+                @Override
+                public void onFinalResponse(Call<BuyerReponse> call, retrofit2.Response<BuyerReponse> response) {
+                    Logger.log(Logger.LogState.E, "getGuide onFinalResponse = " + Utils.getStringByObject(response));
+                    if (callback == null) return;
+                    if (response.isSuccessful()) {
+                        callback.onSuccess(response.body());
+                    } else {
+                        callback.onError();
+                    }
+                }
+
+                @Override
+                public void onFinalFailure(Call<BuyerReponse> call, Throwable t) {
+                    Logger.log(Logger.LogState.E, "onFinalFailure = " + Utils.getStringByObject(t));
+                    if (callback == null)
+                        return;
+                    t.printStackTrace();
+                    callback.onError();
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+            callback.onError();
+        }
+    }
 }

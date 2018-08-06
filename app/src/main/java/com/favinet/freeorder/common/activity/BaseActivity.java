@@ -12,6 +12,10 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.favinet.freeorder.R;
@@ -19,6 +23,7 @@ import com.favinet.freeorder.R;
 import com.favinet.freeorder.common.dialog.ProgressDialog;
 import com.favinet.freeorder.data.config.Constants;
 import com.favinet.freeorder.data.parcel.IntentData;
+import com.favinet.freeorder.ui.activity.MainActivity;
 import com.favinet.freeorder.ui.listener.UpdateListener;
 
 
@@ -281,5 +286,55 @@ public class BaseActivity extends AppCompatActivity implements UpdateListener {
         if (currActivity != null && currActivity.equals(this)) {
             setCurrentActivity(null);
         }
+    }
+
+    public void guidePopupClose(final LinearLayout guide_popup)
+    {
+        final Animation animTransUp = AnimationUtils.loadAnimation(
+                this,R.anim.slide_up_out);
+        animTransUp.setFillAfter(true);
+        animTransUp.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                guide_popup.setVisibility(View.GONE);
+                guide_popup.layout(0, guide_popup.getHeight()*-1, guide_popup.getWidth(), guide_popup.getHeight());
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        guide_popup.startAnimation(animTransUp);
+    }
+
+    public void guidePopupOpen(final LinearLayout guide_popup)
+    {
+        final Animation animTransDown = AnimationUtils.loadAnimation(
+                this,R.anim.slide_up_in);
+        animTransDown.setFillAfter(true);
+        animTransDown.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                guide_popup.setVisibility(View.VISIBLE);
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                guide_popup.layout(0, 0, guide_popup.getWidth(), guide_popup.getHeight());
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        guide_popup.startAnimation(animTransDown);
     }
 }

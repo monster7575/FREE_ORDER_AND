@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.opengl.Visibility;
 import android.os.Build;
 import android.os.Message;
 import android.support.annotation.RequiresApi;
@@ -75,6 +76,7 @@ public class CustomWebView {
     public Map<String, String> titleArr = new HashMap<>();
     private MainActivity.headerJsonCallback callback;
     private MainActivity.titleCallback callbackTitle;
+    private MainActivity.loadingCallback callbackLoading;
     private LoginActivity.headerJsonCallback callbackLogin;
     private LoginActivity.titleCallback callbackTitleLogin;
     private final static int INTENT_CALL_PROFILE_GALLERY = 3002;
@@ -124,6 +126,8 @@ public class CustomWebView {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
 
+            setWebViewLoading(false, "");
+
             Log.e(Constants.LOG_TAG, "shouldOverrideUrlLoading : " +url);
             if (Utils.getNetWorkType(base) == Utils.NETWORK_NO) {
                 AlertDialog.Builder dialog = new AlertDialog.Builder(base);
@@ -159,13 +163,27 @@ public class CustomWebView {
             final String bobjid = Utils.queryToMap(url).get("bobjid");
             final String phonenb = Utils.queryToMap(url).get("phonenb");
             final String idx = (Utils.queryToMap(url).get("idx") == null) ? "" : Utils.queryToMap(url).get("idx");
+            String msg = "";
+            try
+            {
+                msg = URLDecoder.decode((Utils.queryToMap(url).get("msg") == null) ? "" : Utils.queryToMap(url).get("msg"), "UTF-8");
+            }
+            catch (UnsupportedEncodingException e)
+            {
+                e.printStackTrace();
+            }
 
+            final String obj = (Utils.queryToMap(url).get("obj") == null) ? "" : Utils.queryToMap(url).get("obj");
+            final String col = (Utils.queryToMap(url).get("col") == null) ? "" : Utils.queryToMap(url).get("col");
             Logger.log(Logger.LogState.E, "action = " + action);
             Logger.log(Logger.LogState.E, "uobjid = " + uobjid);
             Logger.log(Logger.LogState.E, "bobjid = " + bobjid);
             Logger.log(Logger.LogState.E, "link = " + link);
             Logger.log(Logger.LogState.E, "phonenb = " + phonenb);
             Logger.log(Logger.LogState.E, "idx = " + idx);
+            Logger.log(Logger.LogState.E, "msg = " + msg);
+            Logger.log(Logger.LogState.E, "obj = " + obj);
+            Logger.log(Logger.LogState.E, "col = " + col);
 
             if(action != null)
             {
@@ -194,8 +212,21 @@ public class CustomWebView {
                 else if(action.equals("showHeader"))
                 {
                     Logger.log(Logger.LogState.E, "showHeader url = " + url);
-                    setWebViewLoginHeaderJson(true);
-                    return true;
+                    try
+                    {
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("show", true);
+                        jsonObject.put("obj", obj);
+                        jsonObject.put("col", col);
+                        setWebViewLoginHeaderJson(jsonObject);
+                        return true;
+                    }
+                    catch (JSONException e)
+                    {
+                        e.printStackTrace();
+                        return false;
+                    }
+
                 }
                 else if(action.equals("go_main") ||  action.equals("update"))
                 {
@@ -295,6 +326,30 @@ public class CustomWebView {
                     Logger.log(Logger.LogState.E, "TEL :" + tel);
                     base.startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
                     return true;
+                }
+                else if(action.equals("smslog"))
+                {
+                    setWebViewLoading(true, msg);
+                    return true;
+                }
+                else if(action.equals("guide"))
+                {
+                    try
+                    {
+
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("guide", true);
+                        jsonObject.put("obj", obj);
+                        jsonObject.put("col", col);
+                        setWebViewHeaderJson(jsonObject);
+                        setWebViewLoginHeaderJson(jsonObject);
+                        return true;
+                    }
+                    catch (JSONException e)
+                    {
+                        e.printStackTrace();
+                        return false;
+                    }
                 }
 
             }
@@ -443,20 +498,38 @@ public class CustomWebView {
                     titleArr.put(view.getUrl(), title);
                 }
             }
-            if(view.getUrl().indexOf("/srv/seller/mobile/menu") > -1)
+
+            try
             {
-                setWebViewLoginHeaderJson(true);
+                JSONObject jsonObject = new JSONObject();
+
+                if(view.getUrl().indexOf("/srv/seller/mobile/menu") > -1)
+                {
+                    jsonObject.put("show", true);
+                    setWebViewLoginHeaderJson(jsonObject);
+                }
+                else if(view.getUrl().indexOf("/srv/goods/mobile/insert") > -1)
+                {
+                    jsonObject.put("show", true);
+                    setWebViewLoginHeaderJson(jsonObject);
+                }
+                else if(view.getUrl().indexOf("/srv/seller/mobile/insert") > -1)
+                {
+                    jsonObject.put("show", true);
+                    setWebViewLoginHeaderJson(jsonObject);
+                }
+                else
+                {
+                    jsonObject.put("show", false);
+                    setWebViewLoginHeaderJson(jsonObject);
+                }
+
             }
-            else if(view.getUrl().indexOf("/srv/goods/mobile/insert") > -1)
+            catch (JSONException e)
             {
-                setWebViewLoginHeaderJson(true);
+                e.printStackTrace();
             }
-            else if(view.getUrl().indexOf("/srv/seller/mobile/insert") > -1)
-            {
-                setWebViewLoginHeaderJson(true);
-            }
-            else
-                setWebViewLoginHeaderJson(false);
+
             super.onReceivedTitle(view, title);
         }
 
@@ -536,14 +609,19 @@ public class CustomWebView {
         callbackTitle = listener;
     }
 
-    private void setWebViewLoginHeaderJson(boolean isShow) {
-        if(callbackLogin != null) callbackLogin.onReceive(isShow);
+    private void setWebViewLoginHeaderJson(JSONObject jsonObject) {
+        if(callbackLogin != null) callbackLogin.onReceive(jsonObject);
 
     }
 
     public void setWebHeaderLoginCallback(LoginActivity.headerJsonCallback listener)
     {
         callbackLogin = listener;
+    }
+
+    private void setWebViewLoading(boolean isShow, String msg) {
+        if(callbackLoading != null) callbackLoading.onReceive(isShow, msg);
+
     }
 
     private void setWebViewLoginTitle(String title) {
@@ -553,6 +631,11 @@ public class CustomWebView {
     public void setWebTitleLoginCallback(LoginActivity.titleCallback listener)
     {
         callbackTitleLogin = listener;
+    }
+
+    public void setWebViewLoading(MainActivity.loadingCallback loading) {
+        callbackLoading = loading;
+
     }
 
     public void initContentView(String link) {
@@ -568,11 +651,13 @@ public class CustomWebView {
         base.startActivityForResult(Intent.createChooser(intent, "File Chooser"), INTENT_CALL_PROFILE_GALLERY);
     }
 
-    private void sendSms(String phoneNumber, String sellerContent)
+    public void sendSms(String phoneNumber, String sellerContent)
     {
         SmsManager mSmsManager = SmsManager.getDefault();
-        Logger.log(Logger.LogState.E, "sendSms");
-        String smsText = sellerContent;
+
+        SellerVO sellerVO = SellerData.getInstance().getCurrentSellerVO(base);
+        String smsText =  "<" + sellerVO.getTitle() + ">\r\n" +  sellerContent + "\r\n* 주문 감사드립니다.";
+
         ArrayList<String> smsTextList = mSmsManager.divideMessage(smsText);
         int  numPart = smsTextList.size();
         ArrayList<PendingIntent> sentIntent =  new ArrayList<>();

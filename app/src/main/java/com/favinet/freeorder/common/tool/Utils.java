@@ -6,12 +6,18 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Window;
@@ -334,6 +340,22 @@ public class Utils {
         int week = calendar.get(Calendar.DAY_OF_WEEK);
         return week-1;
     }
+
+    public static SpannableString getUnderLineColorText(String string, String targetString, int color) {
+        SpannableString spannableString = new SpannableString(string);
+        StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+        int targetStartIndex = string.indexOf(targetString);
+        int targetEndIndex = targetStartIndex + targetString.length();
+        Logger.log(Logger.LogState.E, "targetStartIndex = " + Utils.getStringByObject(targetStartIndex));
+        Logger.log(Logger.LogState.E, "targetEndIndex = " + Utils.getStringByObject(targetEndIndex));
+        spannableString.setSpan(boldSpan, targetStartIndex, targetStartIndex, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(color), targetStartIndex, targetEndIndex, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new UnderlineSpan(), targetStartIndex, targetEndIndex, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+
+        return spannableString;
+    }
+
+
 }
 
 

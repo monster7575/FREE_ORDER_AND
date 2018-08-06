@@ -35,5 +35,47 @@
         </FrameLayout>
 
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/shadow_right_bottom"
+        android:orientation="horizontal"
+        android:id="@+id/guide_popup"
+        android:weightSum="10"
+        android:visibility="invisible"
+        android:padding="10dp">
 
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_weight="2"
+            android:id="@+id/popup_icon"
+            android:src="@drawable/baseline_mood_black_48"
+            android:layout_marginLeft="10dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="7"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:gravity="center_vertical"
+            android:id="@+id/popup_content"
+            android:layout_alignRight="@id/popup_icon"
+            android:scrollbars="vertical"
+            android:maxHeight="300dp"
+            android:text=""/>
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:id="@+id/btn_pop_close"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="35dp"
+            android:src="@drawable/baseline_clear_black_36"
+            android:layout_weight="1"
+            />
+
+    </LinearLayout>
 </RelativeLayout>

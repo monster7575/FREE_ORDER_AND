@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -15,11 +16,23 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.method.ScrollingMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.favinet.freeorder.R;
 import com.favinet.freeorder.common.preference.BasePreference;
@@ -27,17 +40,23 @@ import com.favinet.freeorder.common.tool.Logger;
 import com.favinet.freeorder.common.tool.PermissionHelper;
 import com.favinet.freeorder.common.tool.Utils;
 import com.favinet.freeorder.data.config.Constants;
+import com.favinet.freeorder.data.model.BuyerReponse;
 import com.favinet.freeorder.data.model.UploadCon;
 import com.favinet.freeorder.data.tool.DataInterface;
 import com.favinet.freeorder.data.tool.DataManager;
 import com.favinet.freeorder.ui.view.CustomWebView;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.gson.JsonObject;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import butterknife.BindView;
 
@@ -50,16 +69,20 @@ public class LoginActivity extends AppActivity {
     public CustomWebView customWebView;
     private final static int INTENT_CALL_PROFILE_GALLERY = 3002;
     private List<LoginActivity.FileInfo> fileInfoList = new ArrayList<>();
+    private LoginActivity.Listener mListener = new LoginActivity.Listener();
+
     @BindView(R.id.toolbar_header) Toolbar toolbar_header;
     @BindView(R.id.toolbar_title) TextView toolbar_title;
     @BindView(R.id.toolbar_back) ImageButton toolbar_back;
-    private LoginActivity.Listener mListener = new LoginActivity.Listener();
 
+    @BindView(R.id.popup_content) TextView popup_content;
+    @BindView(R.id.btn_pop_close) ImageView btn_pop_close;
+    @BindView(R.id.guide_popup) LinearLayout guide_popup;
 
     private JSONObject mToobarData;
 
     public interface headerJsonCallback{
-        void onReceive(boolean isShow);
+        void onReceive(JSONObject jsonObject);
     }
 
     public interface titleCallback{
@@ -68,9 +91,9 @@ public class LoginActivity extends AppActivity {
 
     private LoginActivity.headerJsonCallback mHeaderJsonCallback = new LoginActivity.headerJsonCallback() {
         @Override
-        public void onReceive(boolean isShow) {
-            Log.e(Constants.LOG_TAG, "mHeaderJsonCallback : " + isShow);
-            initToobar(isShow);
+        public void onReceive(JSONObject jsonObject) {
+            Log.e(Constants.LOG_TAG, "mHeaderJsonCallback : " + Utils.getStringByObject(jsonObject));
+            initToobar(jsonObject);
         }
     };
 
@@ -185,6 +208,8 @@ public class LoginActivity extends AppActivity {
     {
         setSupportActionBar(toolbar_header);
         toolbar_back.setOnClickListener(mListener);
+        btn_pop_close.setOnClickListener(mListener);
+        popup_content.setMovementMethod(new ScrollingMovementMethod());
     }
 
     private class FileInfo{
@@ -198,19 +223,114 @@ public class LoginActivity extends AppActivity {
         }
     }
 
-    public void initToobar(boolean isShow)
+    public void initToobar(JSONObject jsonObject)
     {
         toolbar_header.findViewById(R.id.toolbar_back).setVisibility(View.GONE);
         toolbar_back.setOnClickListener(mListener);
         toolbar_header.findViewById(R.id.toolbar_refresh).setVisibility(View.GONE);
         toolbar_header.findViewById(R.id.toolbar_setting).setVisibility(View.GONE);
-        if(isShow)
-        {
-            toolbar_header.setVisibility(View.VISIBLE);
-        }
-        else
-            toolbar_header.setVisibility(View.GONE);
 
+        try
+        {
+            boolean isGuide = (jsonObject.has("guide")) ? jsonObject.getBoolean("guide") : false;
+            if(isGuide)
+            {
+                String obj = (jsonObject.has("obj")) ? jsonObject.getString("obj") : null;
+                final String col = (jsonObject.has("col")) ? jsonObject.getString("col") : null;
+                if(obj == null || col == null)
+                {
+                    Toast.makeText(LoginActivity.this, "가이드를 불러 올수 없습니다.", Toast.LENGTH_LONG).show();
+                }
+                else
+                {
+                    HashMap<String, String> params = new HashMap<>();
+                    params.put("obj", obj);
+                    params.put("col", col);
+                    DataManager.getInstance(context).api.getGuide(context, params, new DataInterface.ResponseCallback<BuyerReponse>() {
+                        @Override
+                        public void onSuccess(BuyerReponse response) {
+
+                            if(response.data.size() > 0)
+                            {
+
+                                String content = response.data.get(0).getContent();
+                                popup_content.setText(content);
+
+                                try
+                                {
+
+
+                                    Pattern pattern = Pattern.compile("\\[(.*?)\\]");
+                                    Matcher matcher = pattern.matcher(content);
+                                    Logger.log(Logger.LogState.E, "content = " + Utils.getStringByObject(content));
+                                    Spannable spannable = (Spannable) popup_content.getText();
+                                    while (matcher.find())
+                                    {
+
+                                        String text = spannable.toString();
+                                        final String matcherStr = matcher.group(0);
+                                        int start = text.indexOf(matcherStr);
+                                        int end = start + matcherStr.length();
+                                        StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+                                        spannable.setSpan(boldSpan, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                        spannable.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorPrimaryDark)), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                        spannable.setSpan(new UnderlineSpan(), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                        spannable.setSpan(new ClickableSpan() {
+                                            @Override
+                                            public void onClick(View widget) {
+
+                                                Logger.log(Logger.LogState.E, "matcher 1 = ");
+                                                customWebView.initContentView("javascript:setGuideText('"+col+"', '"+matcherStr.replace("[", "").replace("]", "")+"');");
+                                                guidePopupClose(guide_popup);
+                                            }
+
+                                            @Override
+                                            public void updateDrawState(TextPaint ds) {
+                                                ds.setColor(getResources().getColor(R.color.colorPrimaryDark));
+                                                ds.setUnderlineText(true);
+
+                                            }
+                                        }, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+
+                                    }
+                                    popup_content.setMovementMethod(new LinkMovementMethod());
+                                    //      popup_content.setText(popup_content.getText().toString().replace("[", "").replace("]", ""));
+                                    guidePopupOpen(guide_popup);
+                                }
+                                catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
+
+                            }
+                            else
+                                Toast.makeText(LoginActivity.this, "가이드를 불러 올수 없습니다.", Toast.LENGTH_LONG).show();
+
+                        }
+
+                        @Override
+                        public void onError() {
+                            Logger.log(Logger.LogState.E, "savelog fail");
+                        }
+                    });
+                }
+            }
+            else
+            {
+                boolean show = (jsonObject.has("show")) ? jsonObject.getBoolean("show") : false;
+                if(show)
+                {
+                    toolbar_header.setVisibility(View.VISIBLE);
+                }
+                else
+                    toolbar_header.setVisibility(View.GONE);
+            }
+        }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+        }
         stopIndicator();
     }
 
@@ -293,6 +413,9 @@ public class LoginActivity extends AppActivity {
                 case R.id.toolbar_back :
                     if(customWebView.mView.canGoBack())
                         customWebView.mView.goBack();
+                    break;
+                case R.id.btn_pop_close :
+                    guidePopupClose(guide_popup);
                     break;
             }
         }

@@ -21,6 +21,9 @@ public class BuyerVO {
     @SerializedName("regdate")
     @Expose
     private String regdate;
+    @SerializedName("content")
+    @Expose
+    private String content;
 
     public Integer getIdx() {
         return idx;
@@ -54,6 +57,13 @@ public class BuyerVO {
         this.regdate = regdate;
     }
 
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
 
 
 }

@@ -24,6 +24,8 @@ public class Constants {
         public static final String API_SELLER_MSG_INSERT = "/srv/sellmsglog/api/insert";
         public static final String API_BUYER_SELECT = "/srv/buyer/api/select";
         public static final String API_UPFILE = "/srv/upfile/api/save";
+        public static final String API_SMS_LIST = "/srv/smslog/api/list/sms";
+        public static final String API_GUIDE = "/srv/guide/api/list";
     }
 
     public final class MENU_LINKS {

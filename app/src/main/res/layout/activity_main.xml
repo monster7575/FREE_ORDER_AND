@@ -36,4 +36,101 @@
 
     </LinearLayout>
 
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/shadow_right_bottom"
+        android:orientation="horizontal"
+        android:id="@+id/guide_popup"
+        android:weightSum="10"
+        android:visibility="invisible"
+        android:padding="10dp">
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_weight="2"
+            android:id="@+id/popup_icon"
+            android:src="@drawable/baseline_mood_black_48"
+            android:layout_marginLeft="10dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="7"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:gravity="center_vertical"
+            android:id="@+id/popup_content"
+            android:layout_alignRight="@id/popup_icon"
+            android:scrollbars="vertical"
+            android:maxHeight="300dp"
+            android:text=""/>
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:id="@+id/btn_pop_close"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="35dp"
+            android:src="@drawable/baseline_clear_black_36"
+            android:layout_weight="1"
+            />
+
+    </LinearLayout>
+
+    <RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent"
+        android:id="@+id/box_progress"
+        android:clickable="true"
+        android:background="@android:color/transparent"
+        android:visibility="gone">
+
+        <RelativeLayout android:layout_width="300dp" android:layout_height="150dp"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/progress_pop_round">
+            <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true" android:layout_marginLeft="15dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="@string/sending_sms"
+                    android:textColor="#FFFFFF" android:textSize="20sp"
+                    android:textStyle="bold" android:id="@+id/txt_stardown"/>
+                <ProgressBar android:layout_width="270dp" android:layout_height="20dp"
+                    android:id="@+id/progress_starlist"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:progressDrawable="@drawable/custom_progress"
+                    android:layout_below="@id/txt_stardown"
+                    android:layout_marginTop="20dp"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:id="@+id/txt_total"
+                    android:layout_below="@id/progress_starlist"
+                    android:layout_alignLeft="@id/progress_starlist"
+                    android:textColor="#FFFFFF" android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:text="0" android:visibility="invisible"/>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:id="@+id/txt_now"
+                    android:layout_below="@id/progress_starlist"
+                    android:layout_alignRight="@id/progress_starlist"
+                    android:text="0"
+                    android:textColor="#FFFFFF" android:textSize="15sp"
+                    android:textStyle="bold"/>
+
+                <com.beardedhen.androidbootstrap.BootstrapButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:id="@+id/btn_cancel"
+                    android:layout_below="@id/txt_now"
+                    android:layout_centerHorizontal="true"
+                    android:text="취소"
+                    android:textColor="#FFFFFF" android:textSize="15sp"
+                    android:textStyle="bold"/>
+            </RelativeLayout>
+        </RelativeLayout>
+
+    </RelativeLayout>
 </RelativeLayout>
