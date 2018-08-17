@@ -18,8 +18,9 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
 
 
     <application
@@ -63,7 +64,16 @@
             android:theme="@style/ToolbarTheme">
         </activity>
 
+        <activity android:name=".ui.activity.VoiceRecoActivity"
+            android:theme="@style/ToolbarTheme">
+        </activity>
+
         <activity android:name=".ui.activity.MainActivity"
+            android:theme="@style/ToolbarTheme">
+
+        </activity>
+
+        <activity android:name=".ui.activity.SpeechSampleActivity"
             android:theme="@style/ToolbarTheme">
 
         </activity>
@@ -77,7 +87,9 @@
         <service android:name=".data.service.CallingService"/>
 
 
-
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="@string/kakao_app_key" />
 
     </application>
 

@@ -274,7 +274,8 @@ public class Utils {
                 MessageDigest md = MessageDigest.getInstance("SHA");
                 md.update(signature.toByteArray());
                 keyHash = Base64.encodeToString(md.digest(), Base64.DEFAULT);
-                Log.e("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+                Log.e("내패키지",base.getPackageName());
+                Log.e("KeyHash:", keyHash);
             }
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();

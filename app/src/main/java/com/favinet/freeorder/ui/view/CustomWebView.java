@@ -28,6 +28,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -49,6 +50,9 @@ import com.favinet.freeorder.data.tool.DataManager;
 import com.favinet.freeorder.ui.activity.IntroActivity;
 import com.favinet.freeorder.ui.activity.LoginActivity;
 import com.favinet.freeorder.ui.activity.MainActivity;
+import com.favinet.freeorder.ui.activity.VoiceRecoActivity;
+import com.kakao.sdk.newtoneapi.SpeechRecognizerActivity;
+import com.kakao.sdk.newtoneapi.SpeechRecognizerClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -175,6 +179,7 @@ public class CustomWebView {
 
             final String obj = (Utils.queryToMap(url).get("obj") == null) ? "" : Utils.queryToMap(url).get("obj");
             final String col = (Utils.queryToMap(url).get("col") == null) ? "" : Utils.queryToMap(url).get("col");
+
             Logger.log(Logger.LogState.E, "action = " + action);
             Logger.log(Logger.LogState.E, "uobjid = " + uobjid);
             Logger.log(Logger.LogState.E, "bobjid = " + bobjid);
@@ -351,7 +356,17 @@ public class CustomWebView {
                         return false;
                     }
                 }
-
+                else if(action.equals("voice"))
+                {
+                    String serviceType = SpeechRecognizerClient.SERVICE_TYPE_WEB;
+                    Intent i = new Intent(base, VoiceRecoActivity.class);
+                    i.putExtra(SpeechRecognizerActivity.EXTRA_KEY_SERVICE_TYPE, serviceType);
+                    i.putExtra("obj", obj);
+                    i.putExtra("col", col);
+                    i.putExtra("msg", msg);
+                    base.startActivityForResult(i, MainActivity.VOICE_RESULT);
+                    return true;
+                }
             }
             curUrl = url;
             return false;

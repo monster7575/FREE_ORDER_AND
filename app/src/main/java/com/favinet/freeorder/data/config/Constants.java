@@ -13,7 +13,7 @@ public class Constants {
     public static final String DOING_DOMAIN = IS_DEV ? TEST_DOMAIN : REAL_DOMAIN;
     public static final String BASE_URL = "http://" + Constants.DOING_DOMAIN;
     public static final int CALL_OUT_TIME = 10000;
-
+    public static final String KAKAO_VOICE_API_KEY = "7bd55f436782911242a8aaa7892ec3f1";
 
     public static final String INTENT_DATA_KEY = "INTENT_DATA_KEY";
     public static final String LOG_TAG = "FREE_ORDER";

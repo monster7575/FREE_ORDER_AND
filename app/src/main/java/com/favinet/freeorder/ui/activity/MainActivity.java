@@ -1,6 +1,7 @@
 package com.favinet.freeorder.ui.activity;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,6 +22,7 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
+import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ClickableSpan;
@@ -55,6 +57,9 @@ import com.favinet.freeorder.data.tool.DataInterface;
 import com.favinet.freeorder.data.tool.DataManager;
 import com.favinet.freeorder.ui.view.CustomWebView;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.kakao.sdk.newtoneapi.SpeechRecognizeListener;
+import com.kakao.sdk.newtoneapi.SpeechRecognizerClient;
+import com.kakao.sdk.newtoneapi.SpeechRecognizerManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,7 +73,7 @@ import java.util.regex.Pattern;
 
 import butterknife.BindView;
 
-public class MainActivity extends AppActivity
+public class MainActivity extends AppActivity implements SpeechRecognizeListener
 {
 
     @BindView(R.id.toolbar_header) Toolbar toolbar_header;
@@ -91,6 +96,9 @@ public class MainActivity extends AppActivity
     private final static int INTENT_CALL_PROFILE_GALLERY = 3002;
     private List<MainActivity.FileInfo> fileInfoList = new ArrayList<>();
     private  ArrayList<String> smsList = new ArrayList<>();
+    private SpeechRecognizerClient client;
+    public static int VOICE_RESULT = 1;
+
 
     public interface headerJsonCallback{
         void onReceive(JSONObject jsonObject);
@@ -163,9 +171,13 @@ public class MainActivity extends AppActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Logger.log(Logger.LogState.E, "requestCode :" + requestCode);
+        Logger.log(Logger.LogState.E, "resultCode :" + resultCode);
+        Logger.log(Logger.LogState.E, "RESULT_OK :" + RESULT_OK);
+       // Toast.makeText(getApplicationContext(), "requestCode + RESULT_OK : " + requestCode + " : " + RESULT_OK, Toast.LENGTH_LONG).show();
        if (resultCode == RESULT_OK) {
 
-            if (requestCode == INTENT_CALL_PROFILE_GALLERY) { // 킷캣.
+            if (requestCode == INTENT_CALL_PROFILE_GALLERY) {
                 startIndicator("");
                 Uri result = data == null || resultCode != RESULT_OK ? null : data.getData();
 
@@ -200,7 +212,49 @@ public class MainActivity extends AppActivity
 
                 return;
             }
+            else
+            {
+                if(requestCode == VOICE_RESULT)
+                {
+                    Logger.log(Logger.LogState.E, "data :" + data);
+
+                    String obj = data.getStringExtra("obj");
+                    String col = data.getStringExtra("col");
+
+                    Logger.log(Logger.LogState.E, "obj :" + obj);
+                    Logger.log(Logger.LogState.E, "col :" + col);
+
+                    ArrayList<String> results = data.getStringArrayListExtra(VoiceRecoActivity.EXTRA_KEY_RESULT_ARRAY);
+
+                    customWebView.initContentView("javascript:setGuideText('"+col+"', '"+results.get(0).trim()+"');");
+
+
+                }
+                else if (requestCode == RESULT_CANCELED) {
+                    // 음성인식의 오류 등이 아니라 activity의 취소가 발생했을 때.
+                    if (data == null) {
+                        return;
+                    }
+                    int errorCode = data.getIntExtra(VoiceRecoActivity.EXTRA_KEY_ERROR_CODE, -1);
+                    String errorMsg = data.getStringExtra(VoiceRecoActivity.EXTRA_KEY_ERROR_MESSAGE);
+
+                    if (errorCode != -1 && !TextUtils.isEmpty(errorMsg)) {
+                        new android.app.AlertDialog.Builder(this).
+                                setMessage(errorMsg).
+                                setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                }).
+                                show();
+                    }
+                }
+
+                return;
+            }
         }
+
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -209,6 +263,11 @@ public class MainActivity extends AppActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Utils.getKeyHash(this);
+
+        // SDK 초기화
+        SpeechRecognizerManager.getInstance().initializeLibrary(this);
 
         NotificationManager n = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         if(n.isNotificationPolicyAccessGranted()) {
@@ -309,7 +368,6 @@ public class MainActivity extends AppActivity
 
                                 try
                                 {
-
 
                                     Pattern pattern = Pattern.compile("\\[(.*?)\\]");
                                     Matcher matcher = pattern.matcher(content);
@@ -605,4 +663,85 @@ public class MainActivity extends AppActivity
             }
         }
     }
+
+    @Override
+    public void onReady() {
+
+    }
+
+    @Override
+    public void onBeginningOfSpeech() {
+
+    }
+
+    @Override
+    public void onEndOfSpeech() {
+
+    }
+
+    @Override
+    public void onError(int errorCode, String errorMsg) {
+        Log.e("SpeechSampleActivity", "onError");
+        client = null;
+    }
+
+    @Override
+    public void onPartialResult(String partialResult) {
+
+    }
+
+    @Override
+    public void onResults(Bundle results) {
+        final StringBuilder builder = new StringBuilder();
+        Log.i("SpeechSampleActivity", "onResults");
+
+        ArrayList<String> texts = results.getStringArrayList(SpeechRecognizerClient.KEY_RECOGNITION_RESULTS);
+        ArrayList<Integer> confs = results.getIntegerArrayList(SpeechRecognizerClient.KEY_CONFIDENCE_VALUES);
+
+        for (int i = 0; i < texts.size(); i++) {
+            builder.append(texts.get(i));
+            builder.append(" (");
+            builder.append(confs.get(i).intValue());
+            builder.append(")\n");
+        }
+
+        final Activity activity = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // finishing일때는 처리하지 않는다.
+                if (activity.isFinishing()) return;
+
+                android.app.AlertDialog.Builder dialog = new android.app.AlertDialog.Builder(activity).
+                        setMessage(builder.toString()).
+                        setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                dialog.show();
+
+            }
+        });
+
+        client = null;
+    }
+
+    @Override
+    public void onAudioLevel(float audioLevel) {
+
+    }
+
+    @Override
+    public void onFinished() {
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SpeechRecognizerManager.getInstance().finalizeLibrary();
+    }
 }
+

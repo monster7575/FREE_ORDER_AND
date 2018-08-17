@@ -346,7 +346,7 @@ public class LoginActivity extends AppActivity {
     private void checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-            PermissionHelper.getInstance().setPermissionAndActivity(new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.SEND_SMS, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CALL_PHONE}, (Activity) context);
+            PermissionHelper.getInstance().setPermissionAndActivity(new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.SEND_SMS, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CALL_PHONE, Manifest.permission.RECORD_AUDIO}, (Activity) context);
 
             if(!PermissionHelper.getInstance().checkPermission()) {
                 PermissionHelper.getInstance().requestPermission(0, new PermissionHelper.PermissionCallback() {
@@ -385,6 +385,15 @@ public class LoginActivity extends AppActivity {
                         if(size > 0 && permissions[3].equals(Manifest.permission.CALL_PHONE))
                         {
                             if(grantResults[3] != PackageManager.PERMISSION_GRANTED)
+                            {
+                                System.exit(0);
+                                return;
+                            }
+
+                        }
+                        if(size > 0 && permissions[4].equals(Manifest.permission.RECORD_AUDIO))
+                        {
+                            if(grantResults[4] != PackageManager.PERMISSION_GRANTED)
                             {
                                 System.exit(0);
                                 return;
